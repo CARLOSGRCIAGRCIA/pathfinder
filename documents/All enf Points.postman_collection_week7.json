@@ -1,0 +1,913 @@
+{
+	"info": {
+		"_postman_id": "1085e109-0446-4ef8-9eb1-cb3467036d83",
+		"name": "All enf Points",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "37123781"
+	},
+	"item": [
+		{
+			"name": "Register",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"username\": \"carlos mg\",\r\n  \"password\": \"150122\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_urls}}/users/register",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"users",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseData = pm.response.json();\r",
+							"pm.globals.set(\"accessToken\", responseData.accessToken);\r",
+							"pm.globals.set(\"refreshToken\", responseData.refreshToken);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"username\": \"carlos\",\r\n  \"password\": \"150122\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_urls}}/users/login",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"users",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User Profile",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/users/profile",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"users",
+						"profile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Maps",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/maps",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"maps"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create New Map",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const responseData = pm.response.json();\r",
+							"const mapId = responseData._id;\r",
+							"pm.globals.set(\"mapId\", mapId);\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"prueba mapa sin nada\",\r\n  \"width\": 15,\r\n  \"height\": 15,\r\n  \"start\": { \"x\": 2, \"y\": 2 },\r\n  \"end\": { \"x\": 18, \"y\": 18 }\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_urls}}/maps",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"maps"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Specific Map",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/maps/67baee6ab825df379ec6f34d",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"maps",
+						"67baee6ab825df379ec6f34d"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Map",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"name\": \"Maze Challenge\",\r\n  \"width\": 20,\r\n  \"height\": 20,\r\n  \"start\": { \"x\": 2, \"y\": 2 },\r\n  \"end\": { \"x\": 18, \"y\": 18 },\r\n  \"obstacles\": [\r\n    { \"x\": 5, \"y\": 5 },\r\n    { \"x\": 10, \"y\": 10 },\r\n    { \"x\": 7, \"y\": 8 },\r\n    { \"x\": 12, \"y\": 15 },\r\n    { \"x\": 15, \"y\": 3 },\r\n    { \"x\": 9, \"y\": 14 }\r\n  ],\r\n  \"waypoints\": [\r\n    { \"x\": 4, \"y\": 7, \"name\": \"Supply Depot\" },\r\n    { \"x\": 6, \"y\": 12, \"name\": \"Observation Tower\" },\r\n    { \"x\": 14, \"y\": 6, \"name\": \"Safe House\" }\r\n  ]\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_urls}}/maps/{{mapId}}",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"maps",
+						"{{mapId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Obstacle",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const obstacles = pm.response.json();\r",
+							"const lastObstacle = obstacles[obstacles.length - 1];\r",
+							"const obstacleId = lastObstacle._id;\r",
+							"pm.globals.set(\"lastObstacleId\", obstacleId);\r",
+							"console.log(\"ID del último obstáculo creado:\", obstacleId);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"x\": 5,\r\n  \"y\": 10,\r\n  \"size\": 2\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_urls}}/obstacles/{{mapId}}",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"obstacles",
+						"{{mapId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Obstacle",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"x\": 12,\r\n    \"y\": 12,\r\n    \"size\": 1\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_urls}}/obstacles/{{mapId}}/{{lastObstacleId}}",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"obstacles",
+						"{{mapId}}",
+						"{{lastObstacleId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Obstacles",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/obstacles/67baee6ab825df379ec6f34d",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"obstacles",
+						"67baee6ab825df379ec6f34d"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Obstacles",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmQ5MDUwNWU5NzRjYjE0MTIwNmRkY2UiLCJpYXQiOjE3MzkxNDY4NDksImV4cCI6MTczOTE1MDQ0OX0.Hf2WwSBxdwx70pKkItULDGteamG7E7BtRSxUQd4JfZY",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/obstacles/{{mapId}}/{{lastObstacleId}}",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"obstacles",
+						"{{mapId}}",
+						"{{lastObstacleId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add Waypoint",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const obstacles = pm.response.json();\r",
+							"const lastWaypoints = obstacles[obstacles.length - 1];\r",
+							"const waypointId = lastWaypoints._id;\r",
+							"pm.globals.set(\"waypointId\", waypointId);\r",
+							"console.log(\"ID del último waypoint creado:\", waypointId);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n    \"x\": 1, \r\n    \"y\": 9,\r\n    \"name\": \"Safe House\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_urls}}/waypoints/{{mapId}}",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"waypoints",
+						"{{mapId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Waypoint",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n    \"x\": 1, \r\n    \"y\": 17,\r\n    \"name\": \"New Name\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_urls}}/waypoints/{{mapId}}/{{waypointId}}",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"waypoints",
+						"{{mapId}}",
+						"{{waypointId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Waypoints",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/waypoints/67baee6ab825df379ec6f34d",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"waypoints",
+						"67baee6ab825df379ec6f34d"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Waypoint",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NmQ5MDUwNWU5NzRjYjE0MTIwNmRkY2UiLCJpYXQiOjE3MzkxNDY4NDksImV4cCI6MTczOTE1MDQ0OX0.Hf2WwSBxdwx70pKkItULDGteamG7E7BtRSxUQd4JfZY",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/waypoints/{{mapId}}/67a94679e6b2bad79d986521",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"waypoints",
+						"{{mapId}}",
+						"67a94679e6b2bad79d986521"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Finding the optimal  route",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();\r",
+							"const routeId = response.route._id;\r",
+							"pm.globals.set(\"OrtogonalRouteId\", routeId);\r",
+							"console.log(\"ID de la ruta calculada:\", routeId);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"start\": { \"x\": 3, \"y\": 3 },\r\n  \"end\": { \"x\": 10, \"y\": 10}\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_urls}}/routes/{{mapId}}",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"routes",
+						"{{mapId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "validateMap",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();\r",
+							"const routeId = response.route._id;\r",
+							"pm.globals.set(\"OrtogonalRouteId\", routeId);\r",
+							"console.log(\"ID de la ruta calculada:\", routeId);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/routes/validateMap/{{mapId}}",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"routes",
+						"validateMap",
+						"{{mapId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "checkReachability",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();\r",
+							"const routeId = response.route._id;\r",
+							"pm.globals.set(\"OrtogonalRouteId\", routeId);\r",
+							"console.log(\"ID de la ruta calculada:\", routeId);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/routes/checkReachability/{{mapId}}",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"routes",
+						"checkReachability",
+						"{{mapId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Routes",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/routes",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"routes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Optimal route By Id",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/routes/67b224eab22bbb8e1364afff",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"routes",
+						"67b224eab22bbb8e1364afff"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELET Optimal route",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/routes/{{OrtogonalRouteId}}",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"routes",
+						"{{OrtogonalRouteId}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE map",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/maps/67b786541bc30cf180c086ea",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"maps",
+						"67b786541bc30cf180c086ea"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Status Response Time",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/stats/response-times",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"stats",
+						"response-times"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get all status codes",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/stats/status-codes",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"stats",
+						"status-codes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All popular endpoints",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/stats/popular-endpoints",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"stats",
+						"popular-endpoints"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Requests",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_urls}}/stats/requests",
+					"host": [
+						"{{base_urls}}"
+					],
+					"path": [
+						"stats",
+						"requests"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

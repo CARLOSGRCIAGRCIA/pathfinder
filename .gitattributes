@@ -1,0 +1,2 @@
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+videoTarea9/lv_0_20250310235814.mp4 filter=lfs diff=lfs merge=lfs -text
