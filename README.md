@@ -1,70 +1,134 @@
-# Capstone Project - API Path Finder
+# PathFinder API
 
+A RESTful API for pathfinding with maps, waypoints, obstacles, and route optimization.
 
-## Instalación
+## Features
 
-Para instalar y ejecutar la API, sigue estos pasos:
+- **Maps Management** - Create and manage maps with waypoints and obstacles
+- **Pathfinding** - Find optimal routes using pathfinding algorithms
+- **Authentication** - JWT-based authentication with refresh tokens
+- **API Keys** - Manage API keys for external access
+- **Analytics** - Track API usage and performance metrics
+- **Rate Limiting** - Protect API from abuse with Redis-backed rate limiting
+- **Caching** - Redis-powered route caching for performance
+- **RBAC** - Role-based access control (Admin, Editor, Viewer)
 
-1. Clona el repositorio:
+## Quick Start
 
 ```bash
-git clone https://gitlab.com/CarlosMGG/capstone.git
-cd capstone
-```
-
-2. Instala las dependencias:
-
-```bash
+# Install dependencies
 npm install
-```
 
-3. Configura las variables de entorno en un archivo `.env` (si es necesario).
-
-4. Ejecuta la API en modo de desarrollo:
-
-```bash
+# Run in development
 npm run dev
+
+# Run tests
+npm test
+
+# Lint
+npm run lint
 ```
 
-La API estará disponible en `http://localhost:3000`.
-
-## Middleware y Seguridad
-
-La API incluye varias configuraciones y middlewares de seguridad para proteger las solicitudes y optimizar el rendimiento:
-
-- **Helmet**: Establece cabeceras HTTP seguras.
-- **Rate Limiting**: Limita el número de solicitudes por IP para prevenir ataques de denegación de servicio.
-- **Sanitización de entradas**: Utiliza `express-mongo-sanitize` y `xss-clean` para evitar inyecciones de código y ataques XSS.
-- **CORS**: Habilita el acceso a la API desde otros orígenes.
-- **Compresión**: Reduce el tamaño de las respuestas HTTP para mejorar el rendimiento.
-- **Cache**: Configura un middleware de cache para mejorar la eficiencia de las respuestas.
-
-## Pruebas
-
-Para ejecutar las pruebas unitarias, usa el siguiente comando:
-
+## Docker
 
 ```bash
-npm test
+# Development
+docker-compose up
+
+# Production
+docker-compose -f docker-compose.prod.yml up --build
 ```
 
-Jest se encargará de ejecutar las pruebas y generar el informe de cobertura.
+## Environment Variables
 
-## Actual converage
+See `.env.example` for configuration options.
 
-![alt text](images/image.png)
-![alt text](images/imageCov.png)
+## API Endpoints
 
-## Tecnologías utilizadas
+### Authentication
 
-- **Node.js**: Entorno de ejecución para JavaScript del lado del servidor.
-- **Express**: Framework web para Node.js.
-- **Mongoose**: ODM para MongoDB.
-- **Jest**: Framework de pruebas.
-- **Helmet**: Middleware para mejorar la seguridad de las cabeceras HTTP.
-- **Express-Rate-Limit**: Middleware para limitar la cantidad de solicitudes a la API.
-- **Express-Mongo-Sanitize**: Middleware para evitar inyecciones MongoDB.
-- **XSS-Clean**: Middleware para prevenir ataques XSS.
-- **Compression**: Middleware para comprimir las respuestas HTTP.
-- **CORS**: Middleware para habilitar el acceso desde otros orígenes.
-- **Cache Middleware**: Middleware para gestionar la caché en las respuestas.
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login
+- `POST /api/auth/refresh` - Refresh token
+- `POST /api/auth/logout` - Logout
+
+### Maps
+
+- `GET /api/maps` - List maps (paginated)
+- `POST /api/maps` - Create map
+- `GET /api/maps/:id` - Get map
+- `PUT /api/maps/:id` - Update map
+- `DELETE /api/maps/:id` - Delete map
+
+### Waypoints
+
+- `GET /api/maps/:mapId/waypoints` - List waypoints
+- `POST /api/maps/:mapId/waypoints` - Create waypoint
+- `GET /api/waypoints/:id` - Get waypoint
+- `PUT /api/waypoints/:id` - Update waypoint
+- `DELETE /api/waypoints/:id` - Delete waypoint
+
+### Obstacles
+
+- `GET /api/maps/:mapId/obstacles` - List obstacles
+- `POST /api/maps/:mapId/obstacles` - Create obstacle
+- `GET /api/obstacles/:id` - Get obstacle
+- `PUT /api/obstacles/:id` - Update obstacle
+- `DELETE /api/obstacles/:id` - Delete obstacle
+
+### Routes
+
+- `GET /api/routes` - List routes
+- `POST /api/routes` - Create route
+- `POST /api/routes/optimal` - Find optimal route
+- `GET /api/routes/:id` - Get route
+- `DELETE /api/routes/:id` - Delete route
+
+### API Keys
+
+- `GET /api/keys` - List API keys
+- `POST /api/keys` - Create API key
+- `DELETE /api/keys/:id` - Revoke API key
+
+### Analytics
+
+- `GET /api/analytics` - Get analytics data
+- `GET /api/analytics/usage` - Get usage stats
+- `GET /api/versions` - Get API versions
+
+## Security
+
+- JWT authentication with access/refresh tokens
+- Helmet for secure HTTP headers
+- Rate limiting (Redis with in-memory fallback)
+- Input sanitization (MongoDB injection & XSS prevention)
+- CORS configuration
+- API Key authentication for external clients
+- Role-based access control
+
+## Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage
+npm test -- --coverage
+
+# Run specific test file
+npm test -- pathfinderService.test.js
+```
+
+## Tech Stack
+
+- **Runtime**: Node.js 20+
+- **Framework**: Express.js
+- **Database**: MongoDB with Mongoose
+- **Cache**: Redis
+- **Auth**: JWT
+- **Testing**: Jest
+- **Docker**: Multi-stage builds
+
+## License
+
+MIT
