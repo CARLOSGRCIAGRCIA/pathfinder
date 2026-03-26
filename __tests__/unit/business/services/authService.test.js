@@ -1,5 +1,5 @@
 import { Either } from '../../../../src/business/utils/either/Either.js';
-import { AppError } from '../../../../src/business/utils/errorUtils.js';
+import { createError } from '../../../../src/business/utils/errorUtils.js';
 import JwtTokenStrategy from '../../../../src/business/strategies/JwtTokenStrategy.js';
 import RefreshTokenStrategy from '../../../../src/business/strategies/RefreshTokenStrategy.js';
 import { createAuthService } from '../../../../src/business/services/authService.js';
@@ -9,12 +9,12 @@ jest.mock('../../../../src/business/strategies/RefreshTokenStrategy.js');
 
 const mockTokenStrategy = {
   generateToken: jest.fn(),
-  verifyToken: jest.fn()
+  verifyToken: jest.fn(),
 };
 
 const mockRefreshTokenStrategy = {
   generateToken: jest.fn(),
-  verifyToken: jest.fn()
+  verifyToken: jest.fn(),
 };
 
 const authService = createAuthService(mockTokenStrategy, mockRefreshTokenStrategy);
@@ -55,14 +55,28 @@ describe('AuthService', () => {
     it('should return an error if no refresh token is provided', async () => {
       const result = await authService.refreshToken(null);
       expect(result.isLeft()).toBe(true);
-      expect(result.fold((err) => err, (_) => null)).toEqual(AppError('Refresh token is required', 400));
+      result.fold(
+        err => {
+          expect(err.message).toBe('Refresh token is required');
+          expect(err.statusCode).toBe(400);
+        },
+        _ => fail('Should not reach here')
+      );
     });
 
     it('should return an error if refresh token verification fails', async () => {
-      mockRefreshTokenStrategy.verifyToken.mockResolvedValue(Either.left(AppError('Invalid token', 401)));
+      mockRefreshTokenStrategy.verifyToken.mockResolvedValue(
+        Either.left(createError('Invalid token', 401))
+      );
       const result = await authService.refreshToken('invalidToken');
       expect(result.isLeft()).toBe(true);
-      expect(result.fold((err) => err, (_) => null)).toEqual(AppError('Invalid token', 401));
+      result.fold(
+        err => {
+          expect(err.message).toBe('Invalid token');
+          expect(err.statusCode).toBe(401);
+        },
+        _ => fail('Should not reach here')
+      );
     });
 
     it('should generate a new access token if refresh token is valid', async () => {
@@ -71,7 +85,11 @@ describe('AuthService', () => {
 
       const result = await authService.refreshToken('validRefreshToken');
       expect(result.isRight()).toBe(true);
-      expect(result.fold((_) => null, (val) => val)).toEqual({ accessToken: 'newAccessToken', refreshToken: 'validRefreshToken' });
+      result.fold(
+        _ => fail('Should not reach here'),
+        val =>
+          expect(val).toEqual({ accessToken: 'newAccessToken', refreshToken: 'validRefreshToken' })
+      );
     });
   });
 });

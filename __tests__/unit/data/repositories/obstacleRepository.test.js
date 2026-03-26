@@ -1,10 +1,10 @@
-import { Either } from "../../../../src/business/utils/either/Either.js";
-import { AppError } from "../../../../src/business/utils/errorUtils.js";
+import { Either } from '../../../../src/business/utils/either/Either.js';
+import { AppError } from '../../../../src/business/utils/errorUtils.js';
 
-jest.mock("../../../../src/data/models/Obstacle.js", () => {
+jest.mock('../../../../src/data/models/Obstacle.js', () => {
   const mockObstacle = {
     validateSync: jest.fn(),
-    save: jest.fn()
+    save: jest.fn(),
   };
 
   mockObstacle.save.mockImplementation(() => Promise.resolve(mockObstacle));
@@ -18,18 +18,18 @@ jest.mock("../../../../src/data/models/Obstacle.js", () => {
   return ObstacleMock;
 });
 
-import ObstacleRepository from "../../../../src/data/repositories/obstacleRepository.js";
-import Obstacle from "../../../../src/data/models/Obstacle.js";
+import ObstacleRepository from '../../../../src/data/repositories/obstacleRepository.js';
+import Obstacle from '../../../../src/data/models/Obstacle.js';
 
-describe("ObstacleRepository", () => {
+describe('ObstacleRepository', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("create method", () => {
-    it("should create a new obstacle successfully", async () => {
-      const obstacleData = { name: "Rock", map: "map123" };
-      const savedObstacle = { ...obstacleData, _id: "obstacle123" };
+  describe('create method', () => {
+    it('should create a new obstacle successfully', async () => {
+      const obstacleData = { name: 'Rock', map: 'map123' };
+      const savedObstacle = { ...obstacleData, _id: 'obstacle123' };
 
       const mockInstance = Obstacle();
       mockInstance.validateSync.mockReturnValue(null);
@@ -46,9 +46,9 @@ describe("ObstacleRepository", () => {
       );
     });
 
-    it("should return validation error when obstacle data is invalid", async () => {
+    it('should return validation error when obstacle data is invalid', async () => {
       const obstacleData = {};
-      const validationError = { message: "Validation failed" };
+      const validationError = { message: 'Validation failed' };
 
       const mockInstance = Obstacle();
       mockInstance.validateSync.mockReturnValue(validationError);
@@ -64,9 +64,9 @@ describe("ObstacleRepository", () => {
       );
     });
 
-    it("should handle database errors during save", async () => {
-      const obstacleData = { name: "Rock", map: "map123" };
-      const dbError = new Error("Database connection failed");
+    it('should handle database errors during save', async () => {
+      const obstacleData = { name: 'Rock', map: 'map123' };
+      const dbError = new Error('Database connection failed');
 
       const mockInstance = Obstacle();
       mockInstance.validateSync.mockReturnValue(null);
@@ -83,15 +83,15 @@ describe("ObstacleRepository", () => {
     });
   });
 
-  describe("createMultiple method", () => {
-    it("should create multiple obstacles successfully", async () => {
+  describe('createMultiple method', () => {
+    it('should create multiple obstacles successfully', async () => {
       const obstaclesData = [
-        { name: "Rock", map: "map123" },
-        { name: "Tree", map: "map123" }
+        { name: 'Rock', map: 'map123' },
+        { name: 'Tree', map: 'map123' },
       ];
       const savedObstacles = [
-        { ...obstaclesData[0], _id: "obstacle1" },
-        { ...obstaclesData[1], _id: "obstacle2" }
+        { ...obstaclesData[0], _id: 'obstacle1' },
+        { ...obstaclesData[1], _id: 'obstacle2' },
       ];
 
       Obstacle.insertMany.mockResolvedValue(savedObstacles);
@@ -99,7 +99,7 @@ describe("ObstacleRepository", () => {
       const result = await ObstacleRepository.createMultiple(obstaclesData);
 
       expect(Obstacle.insertMany).toHaveBeenCalledWith(obstaclesData, {
-        rawResult: false
+        rawResult: false,
       });
       result.fold(
         error => fail(`Expected success but got error: ${error}`),
@@ -107,19 +107,19 @@ describe("ObstacleRepository", () => {
       );
     });
 
-    it("should handle database errors during insertMany", async () => {
+    it('should handle database errors during insertMany', async () => {
       const obstaclesData = [
-        { name: "Rock", map: "map123" },
-        { name: "Tree", map: "map123" }
+        { name: 'Rock', map: 'map123' },
+        { name: 'Tree', map: 'map123' },
       ];
-      const dbError = new Error("Database connection failed");
+      const dbError = new Error('Database connection failed');
 
       Obstacle.insertMany.mockRejectedValue(dbError);
 
       const result = await ObstacleRepository.createMultiple(obstaclesData);
 
       expect(Obstacle.insertMany).toHaveBeenCalledWith(obstaclesData, {
-        rawResult: false
+        rawResult: false,
       });
       result.fold(
         error => expect(error).toEqual(dbError),
@@ -128,12 +128,12 @@ describe("ObstacleRepository", () => {
     });
   });
 
-  describe("findByMapId method", () => {
-    it("should find obstacles by map ID successfully", async () => {
-      const mapId = "map123";
+  describe('findByMapId method', () => {
+    it('should find obstacles by map ID successfully', async () => {
+      const mapId = 'map123';
       const obstacles = [
-        { _id: "obstacle1", name: "Rock", map: mapId },
-        { _id: "obstacle2", name: "Tree", map: mapId }
+        { _id: 'obstacle1', name: 'Rock', map: mapId },
+        { _id: 'obstacle2', name: 'Tree', map: mapId },
       ];
 
       Obstacle.find.mockResolvedValue(obstacles);
@@ -147,9 +147,9 @@ describe("ObstacleRepository", () => {
       );
     });
 
-    it("should handle database errors during find", async () => {
-      const mapId = "map123";
-      const dbError = new Error("Database query failed");
+    it('should handle database errors during find', async () => {
+      const mapId = 'map123';
+      const dbError = new Error('Database query failed');
 
       Obstacle.find.mockRejectedValue(dbError);
 
@@ -163,20 +163,20 @@ describe("ObstacleRepository", () => {
     });
   });
 
-  describe("update method", () => {
-    it("should update an obstacle successfully", async () => {
-      const obstacleId = "obstacle123";
-      const updateData = { name: "Boulder" };
+  describe('update method', () => {
+    it('should update an obstacle successfully', async () => {
+      const obstacleId = 'obstacle123';
+      const updateData = { name: 'Boulder' };
       const updatedObstacle = {
         _id: obstacleId,
-        name: "Boulder",
-        map: "map123"
+        name: 'Boulder',
+        map: 'map123',
       };
-  
+
       Obstacle.findByIdAndUpdate.mockResolvedValue(updatedObstacle);
-  
+
       const result = await ObstacleRepository.update(obstacleId, updateData);
-  
+
       expect(Obstacle.findByIdAndUpdate).toHaveBeenCalledWith(
         obstacleId,
         { $set: updateData },
@@ -187,16 +187,16 @@ describe("ObstacleRepository", () => {
         success => expect(success).toEqual(updatedObstacle)
       );
     });
-  
-    it("should return not found error when obstacle does not exist", async () => {
-      const obstacleId = "nonexistentId";
-      const updateData = { name: "Boulder" };
-      const notFoundError = AppError("Obstacle not found", 404);
-  
+
+    it('should return not found error when obstacle does not exist', async () => {
+      const obstacleId = 'nonexistentId';
+      const updateData = { name: 'Boulder' };
+      const notFoundError = AppError('Obstacle not found', 404);
+
       Obstacle.findByIdAndUpdate.mockResolvedValue(null);
-  
+
       const result = await ObstacleRepository.update(obstacleId, updateData);
-  
+
       expect(Obstacle.findByIdAndUpdate).toHaveBeenCalledWith(
         obstacleId,
         { $set: updateData },
@@ -207,16 +207,16 @@ describe("ObstacleRepository", () => {
         success => fail(`Expected error but got success: ${success}`)
       );
     });
-  
-    it("should handle database errors during update", async () => {
-      const obstacleId = "obstacle123";
-      const updateData = { name: "Boulder" };
-      const dbError = new Error("Database update failed");
-  
+
+    it('should handle database errors during update', async () => {
+      const obstacleId = 'obstacle123';
+      const updateData = { name: 'Boulder' };
+      const dbError = new Error('Database update failed');
+
       Obstacle.findByIdAndUpdate.mockRejectedValue(dbError);
-  
+
       const result = await ObstacleRepository.update(obstacleId, updateData);
-  
+
       expect(Obstacle.findByIdAndUpdate).toHaveBeenCalledWith(
         obstacleId,
         { $set: updateData },
@@ -229,10 +229,10 @@ describe("ObstacleRepository", () => {
     });
   });
 
-  describe("delete method", () => {
-    it("should delete an obstacle successfully", async () => {
-      const obstacleId = "obstacle123";
-      const deletedObstacle = { _id: obstacleId, name: "Rock", map: "map123" };
+  describe('delete method', () => {
+    it('should delete an obstacle successfully', async () => {
+      const obstacleId = 'obstacle123';
+      const deletedObstacle = { _id: obstacleId, name: 'Rock', map: 'map123' };
 
       Obstacle.findByIdAndDelete.mockResolvedValue(deletedObstacle);
 
@@ -245,9 +245,9 @@ describe("ObstacleRepository", () => {
       );
     });
 
-    it("should return not found error when obstacle does not exist", async () => {
-      const obstacleId = "nonexistentId";
-      const notFoundError = AppError("Obstacle not found", 404);
+    it('should return not found error when obstacle does not exist', async () => {
+      const obstacleId = 'nonexistentId';
+      const notFoundError = AppError('Obstacle not found', 404);
 
       Obstacle.findByIdAndDelete.mockResolvedValue(null);
 
@@ -260,9 +260,9 @@ describe("ObstacleRepository", () => {
       );
     });
 
-    it("should handle database errors during delete", async () => {
-      const obstacleId = "obstacle123";
-      const dbError = new Error("Database delete failed");
+    it('should handle database errors during delete', async () => {
+      const obstacleId = 'obstacle123';
+      const dbError = new Error('Database delete failed');
 
       Obstacle.findByIdAndDelete.mockRejectedValue(dbError);
 

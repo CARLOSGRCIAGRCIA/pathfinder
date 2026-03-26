@@ -47,7 +47,7 @@ describe('DefaultWaypointStrategy', () => {
     const result = await DefaultWaypointStrategy.createMultiple(mapId, waypointsData);
     expect(result).toEqual(expectedResult);
     expect(WaypointRepository.createMultiple).toHaveBeenCalledWith(
-      waypointsData.map((waypoint) => ({ ...waypoint, map: mapId }))
+      waypointsData.map(waypoint => ({ ...waypoint, map: mapId }))
     );
   });
 
@@ -61,12 +61,16 @@ describe('DefaultWaypointStrategy', () => {
 
     WaypointRepository.createMultiple.mockRejectedValue(error);
 
-    await expect(DefaultWaypointStrategy.createMultiple(mapId, waypointsData)).rejects.toThrow(error);
+    await expect(DefaultWaypointStrategy.createMultiple(mapId, waypointsData)).rejects.toThrow(
+      error
+    );
   });
 
   test('findByMapId should return waypoints for a map', async () => {
     const mapId = 'map123';
-    const expectedResult = [{ id: 'waypoint123', name: 'Waypoint 1', position: { x: 5, y: 5 }, map: mapId }];
+    const expectedResult = [
+      { id: 'waypoint123', name: 'Waypoint 1', position: { x: 5, y: 5 }, map: mapId },
+    ];
 
     WaypointRepository.findByMapId.mockResolvedValue(expectedResult);
 

@@ -49,7 +49,7 @@ describe('DefaultObstacleStrategy', () => {
     const result = await DefaultObstacleStrategy.createMultiple(mapId, obstaclesData);
     expect(result).toEqual(expectedResult);
     expect(ObstacleRepository.createMultiple).toHaveBeenCalledWith(
-      obstaclesData.map((obstacle) => ({ ...obstacle, map: mapId }))
+      obstaclesData.map(obstacle => ({ ...obstacle, map: mapId }))
     );
   });
 
@@ -63,13 +63,17 @@ describe('DefaultObstacleStrategy', () => {
 
     ObstacleRepository.createMultiple.mockRejectedValue(error);
 
-    await expect(DefaultObstacleStrategy.createMultiple(mapId, obstaclesData)).rejects.toThrow(error);
+    await expect(DefaultObstacleStrategy.createMultiple(mapId, obstaclesData)).rejects.toThrow(
+      error
+    );
   });
 
   // Tests para findByMapId
   test('findByMapId should return obstacles for a map', async () => {
     const mapId = 'map123';
-    const expectedResult = [{ id: 'obstacle123', name: 'Rock', position: { x: 10, y: 20 }, map: mapId }];
+    const expectedResult = [
+      { id: 'obstacle123', name: 'Rock', position: { x: 10, y: 20 }, map: mapId },
+    ];
 
     ObstacleRepository.findByMapId.mockResolvedValue(expectedResult);
 
