@@ -1,13 +1,15 @@
-import memoizeFindOptimalPath from "../../../../src/business/utils/memoization.js";
+import memoizeFindOptimalPath from '../../../../src/business/utils/memoization.js';
 
 describe('memoizeFindOptimalPath', () => {
   let mockFindOptimalPath;
   let memoizedFindOptimalPath;
 
   beforeEach(() => {
-    mockFindOptimalPath = jest.fn((start, end, obstacles, waypoints, width, height, userPreferences) => {
-      return `Path from (${start.x},${start.y}) to (${end.x},${end.y})`;
-    });
+    mockFindOptimalPath = jest.fn(
+      (start, end, obstacles, waypoints, width, height, userPreferences) => {
+        return `Path from (${start.x},${start.y}) to (${end.x},${end.y})`;
+      }
+    );
 
     memoizedFindOptimalPath = memoizeFindOptimalPath(mockFindOptimalPath, 2);
   });
@@ -21,7 +23,15 @@ describe('memoizeFindOptimalPath', () => {
     const height = 100;
     const userPreferences = {};
 
-    const result = memoizedFindOptimalPath(start, end, obstacles, waypoints, width, height, userPreferences);
+    const result = memoizedFindOptimalPath(
+      start,
+      end,
+      obstacles,
+      waypoints,
+      width,
+      height,
+      userPreferences
+    );
 
     expect(mockFindOptimalPath).toHaveBeenCalledTimes(1);
     expect(result).toBe('Path from (0,0) to (10,10)');
@@ -37,7 +47,15 @@ describe('memoizeFindOptimalPath', () => {
     const userPreferences = {};
 
     memoizedFindOptimalPath(start, end, obstacles, waypoints, width, height, userPreferences);
-    const result = memoizedFindOptimalPath(start, end, obstacles, waypoints, width, height, userPreferences);
+    const result = memoizedFindOptimalPath(
+      start,
+      end,
+      obstacles,
+      waypoints,
+      width,
+      height,
+      userPreferences
+    );
 
     expect(mockFindOptimalPath).toHaveBeenCalledTimes(1);
     expect(result).toBe('Path from (0,0) to (10,10)');
@@ -70,13 +88,24 @@ describe('memoizeFindOptimalPath', () => {
   it('should handle malformed points in obstacles and waypoints', () => {
     const start = { x: 0, y: 0 };
     const end = { x: 10, y: 10 };
-    const obstacles = [{ x: null, y: null }, { x: undefined, y: undefined }]; 
+    const obstacles = [
+      { x: null, y: null },
+      { x: undefined, y: undefined },
+    ];
     const waypoints = [{ x: 'invalid', y: 'invalid' }];
     const width = 100;
     const height = 100;
     const userPreferences = {};
 
-    const result = memoizedFindOptimalPath(start, end, obstacles, waypoints, width, height, userPreferences);
+    const result = memoizedFindOptimalPath(
+      start,
+      end,
+      obstacles,
+      waypoints,
+      width,
+      height,
+      userPreferences
+    );
 
     expect(mockFindOptimalPath).toHaveBeenCalledTimes(1);
     expect(result).toBe('Path from (0,0) to (10,10)');
@@ -91,7 +120,15 @@ describe('memoizeFindOptimalPath', () => {
     const height = 100;
     const userPreferences = {};
 
-    const result = memoizedFindOptimalPath(start, end, obstacles, waypoints, width, height, userPreferences);
+    const result = memoizedFindOptimalPath(
+      start,
+      end,
+      obstacles,
+      waypoints,
+      width,
+      height,
+      userPreferences
+    );
 
     expect(mockFindOptimalPath).toHaveBeenCalledTimes(1);
     expect(result).toBe('Path from (0,0) to (10,10)');

@@ -7,78 +7,80 @@ jest.mock('jsonwebtoken');
 jest.mock('../../../../src/data/config/environment.js');
 
 describe('RefreshTokenStrategy', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('generateToken', () => {
+    it('should generate a valid refresh token', async () => {
+      const mockToken = 'mockRefreshToken123';
+      jwt.sign.mockReturnValue(mockToken);
+
+      Environment.REFRESH_TOKEN_SECRET = 'refreshSecret';
+      Environment.REFRESH_TOKEN_EXPIRES_IN = '7d';
+
+      const userId = 'user123';
+      const result = await RefreshTokenStrategy.generateToken(userId);
+
+      expect(result.isRight()).toBe(true);
+      expect(result.getOrElse(null)).toBe(mockToken);
+
+      expect(jwt.sign).toHaveBeenCalledWith({ userId }, Environment.REFRESH_TOKEN_SECRET, {
+        expiresIn: Environment.REFRESH_TOKEN_EXPIRES_IN,
+      });
     });
 
-    describe('generateToken', () => {
-        it('should generate a valid refresh token', async () => {
-            const mockToken = 'mockRefreshToken123';
-            jwt.sign.mockReturnValue(mockToken);
+    it('should return an error if token generation fails', async () => {
+      const mockError = new Error('Token generation failed');
+      jwt.sign.mockImplementation(() => {
+        throw mockError;
+      });
 
-            Environment.REFRESH_TOKEN_SECRET = 'refreshSecret';
-            Environment.REFRESH_TOKEN_EXPIRES_IN = '7d';
+      const userId = 'user123';
+      const result = await RefreshTokenStrategy.generateToken(userId);
 
-            const userId = 'user123';
-            const result = await RefreshTokenStrategy.generateToken(userId);
+      expect(result.isLeft()).toBe(true);
+      expect(
+        result.fold(
+          error => error,
+          () => 'Should not reach here'
+        )
+      ).toEqual(mockError);
+    });
+  });
 
-            expect(result.isRight()).toBe(true);
-            expect(result.getOrElse(null)).toBe(mockToken);
+  describe('verifyToken', () => {
+    it('should verify a valid refresh token', async () => {
+      const mockPayload = { userId: 'user123' };
+      jwt.verify.mockReturnValue(mockPayload);
 
-            expect(jwt.sign).toHaveBeenCalledWith(
-                { userId },
-                Environment.REFRESH_TOKEN_SECRET,
-                { expiresIn: Environment.REFRESH_TOKEN_EXPIRES_IN }
-            );
-        });
+      Environment.REFRESH_TOKEN_SECRET = 'refreshSecret';
 
-        it('should return an error if token generation fails', async () => {
-            const mockError = new Error('Token generation failed');
-            jwt.sign.mockImplementation(() => {
-                throw mockError;
-            });
+      const token = 'mockRefreshToken123';
+      const result = await RefreshTokenStrategy.verifyToken(token);
 
-            const userId = 'user123';
-            const result = await RefreshTokenStrategy.generateToken(userId); 
+      expect(result.isRight()).toBe(true);
+      expect(result.getOrElse(null)).toEqual(mockPayload);
 
-            expect(result.isLeft()).toBe(true);
-            expect(result.fold(
-                error => error,
-                () => 'Should not reach here'
-            )).toEqual(mockError);
-        });
+      expect(jwt.verify).toHaveBeenCalledWith(token, Environment.REFRESH_TOKEN_SECRET);
     });
 
-    describe('verifyToken', () => {
-        it('should verify a valid refresh token', async () => {
-            const mockPayload = { userId: 'user123' };
-            jwt.verify.mockReturnValue(mockPayload);
+    it('should return an error if token verification fails', async () => {
+      const mockError = new Error('Invalid token');
+      jwt.verify.mockImplementation(() => {
+        throw mockError;
+      });
 
-            Environment.REFRESH_TOKEN_SECRET = 'refreshSecret';
+      const token = 'invalidRefreshToken';
+      const result = await RefreshTokenStrategy.verifyToken(token);
 
-            const token = 'mockRefreshToken123';
-            const result = await RefreshTokenStrategy.verifyToken(token);
-
-            expect(result.isRight()).toBe(true);
-            expect(result.getOrElse(null)).toEqual(mockPayload);
-
-            expect(jwt.verify).toHaveBeenCalledWith(token, Environment.REFRESH_TOKEN_SECRET);
-        });
-
-        it('should return an error if token verification fails', async () => {
-            const mockError = new Error('Invalid token');
-            jwt.verify.mockImplementation(() => {
-                throw mockError;
-            });
-
-            const token = 'invalidRefreshToken';
-            const result = await RefreshTokenStrategy.verifyToken(token);
-
-            expect(result.isLeft()).toBe(true);
-            expect(result.fold(
-                error => error,
-                () => 'Should not reach here'
-            )).toEqual(mockError);
-        });
+      expect(result.isLeft()).toBe(true);
+      expect(
+        result.fold(
+          error => error,
+          () => 'Should not reach here'
+        )
+      ).toEqual(mockError);
     });
+  });
 });

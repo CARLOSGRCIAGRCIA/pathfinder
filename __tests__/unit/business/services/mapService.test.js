@@ -14,11 +14,11 @@ describe('MapService', () => {
       create: jest.fn(),
       findById: jest.fn(),
       update: jest.fn(),
-      delete: jest.fn()
+      delete: jest.fn(),
     };
 
     mockSearchStrategy = {
-      search: jest.fn()
+      search: jest.fn(),
     };
 
     mapService = MapService(mockMapRepository, mockSearchStrategy);
@@ -33,17 +33,22 @@ describe('MapService', () => {
     const params = { page: 1, limit: 10 };
 
     test('should return list of maps correctly', async () => {
-      const mockMaps = [{ id: 'map1', name: 'Map 1' }, { id: 'map2', name: 'Map 2' }];
+      const mockMaps = [
+        { id: 'map1', name: 'Map 1' },
+        { id: 'map2', name: 'Map 2' },
+      ];
       mockMapRepository.findAll.mockResolvedValue(Either.right(mockMaps));
 
       const result = await mapService.getMaps(params, userId);
 
       expect(mockMapRepository.findAll).toHaveBeenCalledWith({}, 1, 10, 'user123');
       expect(result.isRight()).toBe(true);
-      expect(result.fold(
-        err => err,
-        data => data
-      )).toEqual(mockMaps);
+      expect(
+        result.fold(
+          err => err,
+          data => data
+        )
+      ).toEqual(mockMaps);
     });
 
     test('should filter by name if provided', async () => {
@@ -54,9 +59,9 @@ describe('MapService', () => {
       const result = await mapService.getMaps(paramsWithName, userId);
 
       expect(mockMapRepository.findAll).toHaveBeenCalledWith(
-        { name: new RegExp('test', 'i') }, 
-        1, 
-        10, 
+        { name: new RegExp('test', 'i') },
+        1,
+        10,
         'user123'
       );
       expect(result.isRight()).toBe(true);
@@ -68,14 +73,18 @@ describe('MapService', () => {
       const result = await mapService.getMaps(params, userId);
 
       expect(result.isLeft()).toBe(true);
-      expect(result.fold(
-        err => err.statusCode,
-        _ => null
-      )).toBe(500);
-      expect(result.fold(
-        err => err.message,
-        _ => null
-      )).toBe('Error fetching maps');
+      expect(
+        result.fold(
+          err => err.statusCode,
+          _ => null
+        )
+      ).toBe(500);
+      expect(
+        result.fold(
+          err => err.message,
+          _ => null
+        )
+      ).toBe('Error fetching maps');
     });
   });
 
@@ -89,10 +98,12 @@ describe('MapService', () => {
 
       expect(mockSearchStrategy.search).toHaveBeenCalledWith(query);
       expect(result.isRight()).toBe(true);
-      expect(result.fold(
-        err => err,
-        data => data
-      )).toEqual(mockResults);
+      expect(
+        result.fold(
+          err => err,
+          data => data
+        )
+      ).toEqual(mockResults);
     });
 
     test('should handle search errors correctly', async () => {
@@ -102,14 +113,18 @@ describe('MapService', () => {
       const result = await mapService.searchMaps(query);
 
       expect(result.isLeft()).toBe(true);
-      expect(result.fold(
-        err => err.statusCode,
-        _ => null
-      )).toBe(500);
-      expect(result.fold(
-        err => err.message,
-        _ => null
-      )).toBe('Error searching maps');
+      expect(
+        result.fold(
+          err => err.statusCode,
+          _ => null
+        )
+      ).toBe(500);
+      expect(
+        result.fold(
+          err => err.message,
+          _ => null
+        )
+      ).toBe('Error searching maps');
     });
   });
 
@@ -124,10 +139,12 @@ describe('MapService', () => {
 
       expect(mockMapRepository.create).toHaveBeenCalledWith(mapData);
       expect(result.isRight()).toBe(true);
-      expect(result.fold(
-        err => err,
-        data => data
-      )).toEqual(createdMap);
+      expect(
+        result.fold(
+          err => err,
+          data => data
+        )
+      ).toEqual(createdMap);
     });
 
     test('should handle validation errors', async () => {
@@ -138,14 +155,18 @@ describe('MapService', () => {
       const result = await mapService.createMap(mapData);
 
       expect(result.isLeft()).toBe(true);
-      expect(result.fold(
-        err => err.statusCode,
-        _ => null
-      )).toBe(400);
-      expect(result.fold(
-        err => err.message,
-        _ => null
-      )).toBe('Validation failed');
+      expect(
+        result.fold(
+          err => err.statusCode,
+          _ => null
+        )
+      ).toBe(400);
+      expect(
+        result.fold(
+          err => err.message,
+          _ => null
+        )
+      ).toBe('Validation failed');
     });
 
     test('should handle other errors when creating', async () => {
@@ -154,14 +175,18 @@ describe('MapService', () => {
       const result = await mapService.createMap(mapData);
 
       expect(result.isLeft()).toBe(true);
-      expect(result.fold(
-        err => err.statusCode,
-        _ => null
-      )).toBe(500);
-      expect(result.fold(
-        err => err.message,
-        _ => null
-      )).toBe('Database error');
+      expect(
+        result.fold(
+          err => err.statusCode,
+          _ => null
+        )
+      ).toBe(500);
+      expect(
+        result.fold(
+          err => err.message,
+          _ => null
+        )
+      ).toBe('Database error');
     });
   });
 
@@ -177,10 +202,12 @@ describe('MapService', () => {
 
       expect(mockMapRepository.findById).toHaveBeenCalledWith(mapId, userId);
       expect(result.isRight()).toBe(true);
-      expect(result.fold(
-        err => err,
-        data => data
-      )).toEqual(mockMap);
+      expect(
+        result.fold(
+          err => err,
+          data => data
+        )
+      ).toEqual(mockMap);
     });
 
     test('should handle errors when searching by ID', async () => {
@@ -189,14 +216,18 @@ describe('MapService', () => {
       const result = await mapService.getMap(mapId, userId);
 
       expect(result.isLeft()).toBe(true);
-      expect(result.fold(
-        err => err.statusCode,
-        _ => null
-      )).toBe(404);
-      expect(result.fold(
-        err => err.message,
-        _ => null
-      )).toBe('Map not found');
+      expect(
+        result.fold(
+          err => err.statusCode,
+          _ => null
+        )
+      ).toBe(404);
+      expect(
+        result.fold(
+          err => err.message,
+          _ => null
+        )
+      ).toBe('Map not found');
     });
   });
 
@@ -213,10 +244,12 @@ describe('MapService', () => {
 
       expect(mockMapRepository.update).toHaveBeenCalledWith(mapId, updateData, userId);
       expect(result.isRight()).toBe(true);
-      expect(result.fold(
-        err => err,
-        data => data
-      )).toEqual(updatedMap);
+      expect(
+        result.fold(
+          err => err,
+          data => data
+        )
+      ).toEqual(updatedMap);
     });
 
     test('should handle errors when updating', async () => {
@@ -225,14 +258,18 @@ describe('MapService', () => {
       const result = await mapService.updateMap(mapId, updateData, userId);
 
       expect(result.isLeft()).toBe(true);
-      expect(result.fold(
-        err => err.statusCode,
-        _ => null
-      )).toBe(404);
-      expect(result.fold(
-        err => err.message,
-        _ => null
-      )).toBe('No permission');
+      expect(
+        result.fold(
+          err => err.statusCode,
+          _ => null
+        )
+      ).toBe(404);
+      expect(
+        result.fold(
+          err => err.message,
+          _ => null
+        )
+      ).toBe('No permission');
     });
 
     test('should use default message if no error message is provided', async () => {
@@ -241,10 +278,12 @@ describe('MapService', () => {
       const result = await mapService.updateMap(mapId, updateData, userId);
 
       expect(result.isLeft()).toBe(true);
-      expect(result.fold(
-        err => err.message,
-        _ => null
-      )).toBe('Error updating map or you have no permission to update this map');
+      expect(
+        result.fold(
+          err => err.message,
+          _ => null
+        )
+      ).toBe('Error updating map or you have no permission to update this map');
     });
   });
 
@@ -260,10 +299,12 @@ describe('MapService', () => {
 
       expect(mockMapRepository.delete).toHaveBeenCalledWith(mapId, userId);
       expect(result.isRight()).toBe(true);
-      expect(result.fold(
-        err => err,
-        data => data
-      )).toEqual(deleteResult);
+      expect(
+        result.fold(
+          err => err,
+          data => data
+        )
+      ).toEqual(deleteResult);
     });
 
     test('should handle errors when deleting', async () => {
@@ -272,14 +313,18 @@ describe('MapService', () => {
       const result = await mapService.deleteMap(mapId, userId);
 
       expect(result.isLeft()).toBe(true);
-      expect(result.fold(
-        err => err.statusCode,
-        _ => null
-      )).toBe(404);
-      expect(result.fold(
-        err => err.message,
-        _ => null
-      )).toBe('No permission to delete');
+      expect(
+        result.fold(
+          err => err.statusCode,
+          _ => null
+        )
+      ).toBe(404);
+      expect(
+        result.fold(
+          err => err.message,
+          _ => null
+        )
+      ).toBe('No permission to delete');
     });
 
     test('should use default message if no error message is provided', async () => {
@@ -288,10 +333,12 @@ describe('MapService', () => {
       const result = await mapService.deleteMap(mapId, userId);
 
       expect(result.isLeft()).toBe(true);
-      expect(result.fold(
-        err => err.message,
-        _ => null
-      )).toBe('Error deleting map or you have no permission to delete this map');
+      expect(
+        result.fold(
+          err => err.message,
+          _ => null
+        )
+      ).toBe('Error deleting map or you have no permission to delete this map');
     });
   });
 });

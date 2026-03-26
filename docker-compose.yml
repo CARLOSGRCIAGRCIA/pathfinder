@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongo:27017/pathfinder
+      - JWT_SECRET=pathfinder_jwt_secret_key_2024_seguro_muy_largo
+      - REFRESH_TOKEN_SECRET=pathfinder_refresh_token_secret_key_2024_muy_seguro
+      - REFRESH_TOKEN_EXPIRES_IN=7d
+      - JWT_EXPIRES_IN=1h
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: pathfinder
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mongo_data:

@@ -11,7 +11,7 @@ const trackingSchema = new mongoose.Schema({
   },
   requestCount: { type: Number, required: true },
   timestamp: { type: Date, default: Date.now },
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, 
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 });
 
 export default mongoose.model('Tracking', trackingSchema);

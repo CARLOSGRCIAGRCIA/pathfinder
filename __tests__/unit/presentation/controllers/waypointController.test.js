@@ -1,8 +1,8 @@
-import WaypointController from "../../../../src/presentation/controllers/waypointController";
-import { Either } from "../../../../src/business/utils/either/Either";
-import { AppError } from "../../../../src/business/utils/errorUtils";
+import WaypointController from '../../../../src/presentation/controllers/waypointController';
+import { Either } from '../../../../src/business/utils/either/Either';
+import { AppError } from '../../../../src/business/utils/errorUtils';
 
-describe("WaypointController", () => {
+describe('WaypointController', () => {
   let mockWaypointService;
   let mockReq;
   let mockRes;
@@ -13,20 +13,20 @@ describe("WaypointController", () => {
       createWaypoints: jest.fn(),
       getWaypointsByMapId: jest.fn(),
       updateWaypoint: jest.fn(),
-      deleteWaypoint: jest.fn()
+      deleteWaypoint: jest.fn(),
     };
 
     mockReq = {
       params: {
-        mapId: "test-map-id",
-        waypointId: "test-waypoint-id"
+        mapId: 'test-map-id',
+        waypointId: 'test-waypoint-id',
       },
-      body: {}
+      body: {},
     };
 
     mockRes = {
       status: jest.fn().mockReturnThis(),
-      json: jest.fn()
+      json: jest.fn(),
     };
 
     mockNext = jest.fn();
@@ -36,56 +36,44 @@ describe("WaypointController", () => {
     jest.clearAllMocks();
   });
 
-  describe("createWaypoint", () => {
+  describe('createWaypoint', () => {
     const mockWaypointData = {
-      name: "Test Waypoint",
-      coordinates: { lat: 40.7128, lng: -74.006 }
+      name: 'Test Waypoint',
+      coordinates: { lat: 40.7128, lng: -74.006 },
     };
 
-    test("should successfully create a single waypoint", async () => {
-      const mockWaypointData = { name: "Test Waypoint", x: 10, y: 20 };
+    test('should successfully create a single waypoint', async () => {
+      const mockWaypointData = { name: 'Test Waypoint', x: 10, y: 20 };
       mockReq.body = mockWaypointData;
-      const mockWaypoint = { id: "new-waypoint-id", ...mockWaypointData };
-      mockWaypointService.createWaypoints.mockResolvedValue(
-        Either.right([mockWaypoint])
-      );
+      const mockWaypoint = { id: 'new-waypoint-id', ...mockWaypointData };
+      mockWaypointService.createWaypoints.mockResolvedValue(Either.right([mockWaypoint]));
 
-      await WaypointController.createWaypoint(mockWaypointService)(
-        mockReq,
-        mockRes,
-        mockNext
-      );
+      await WaypointController.createWaypoint(mockWaypointService)(mockReq, mockRes, mockNext);
 
       expect(mockWaypointService.createWaypoints).toHaveBeenCalledWith(
-        "test-map-id",
+        'test-map-id',
         mockWaypointData
       );
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith([mockWaypoint]);
       expect(mockNext).not.toHaveBeenCalled();
     });
-    test("should successfully create multiple waypoints", async () => {
+    test('should successfully create multiple waypoints', async () => {
       const mockWaypointsData = [
-        { name: "Waypoint 1", x: 10, y: 20 },
-        { name: "Waypoint 2", x: 15, y: 25 }
+        { name: 'Waypoint 1', x: 10, y: 20 },
+        { name: 'Waypoint 2', x: 15, y: 25 },
       ];
       mockReq.body = mockWaypointsData;
       const mockWaypoints = mockWaypointsData.map((data, index) => ({
         id: `new-waypoint-id-${index}`,
-        ...data
+        ...data,
       }));
-      mockWaypointService.createWaypoints.mockResolvedValue(
-        Either.right(mockWaypoints)
-      );
+      mockWaypointService.createWaypoints.mockResolvedValue(Either.right(mockWaypoints));
 
-      await WaypointController.createWaypoint(mockWaypointService)(
-        mockReq,
-        mockRes,
-        mockNext
-      );
+      await WaypointController.createWaypoint(mockWaypointService)(mockReq, mockRes, mockNext);
 
       expect(mockWaypointService.createWaypoints).toHaveBeenCalledWith(
-        "test-map-id",
+        'test-map-id',
         mockWaypointsData
       );
       expect(mockRes.status).toHaveBeenCalledWith(201);
@@ -93,170 +81,124 @@ describe("WaypointController", () => {
       expect(mockNext).not.toHaveBeenCalled();
     });
 
-    test("should handle validation errors during creation", async () => {
-      const mockWaypointData = { name: "Test Waypoint", x: 10, y: 20 };
+    test('should handle validation errors during creation', async () => {
+      const mockWaypointData = { name: 'Test Waypoint', x: 10, y: 20 };
       mockReq.body = mockWaypointData;
-      const error = new AppError("Invalid waypoint data", 400);
+      const error = new AppError('Invalid waypoint data', 400);
       mockWaypointService.createWaypoints.mockResolvedValue(Either.left(error));
 
-      await WaypointController.createWaypoint(mockWaypointService)(
-        mockReq,
-        mockRes,
-        mockNext
-      );
+      await WaypointController.createWaypoint(mockWaypointService)(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
       expect(mockRes.json).not.toHaveBeenCalled();
     });
     test('should handle validation errors during creation', async () => {
-        const mockWaypointData = { name: 'Test Waypoint', x: 10, y: 20 };
-        mockReq.body = mockWaypointData;
-        const error = new AppError('Invalid waypoint data', 400);
-        mockWaypointService.createWaypoints.mockResolvedValue(Either.left(error));
-      
-        await WaypointController.createWaypoint(mockWaypointService)(mockReq, mockRes, mockNext);
-      
-        expect(mockNext).toHaveBeenCalledWith(error);
-        expect(mockRes.json).not.toHaveBeenCalled();
-      });
-  });
+      const mockWaypointData = { name: 'Test Waypoint', x: 10, y: 20 };
+      mockReq.body = mockWaypointData;
+      const error = new AppError('Invalid waypoint data', 400);
+      mockWaypointService.createWaypoints.mockResolvedValue(Either.left(error));
 
-  describe("getWaypoints", () => {
-    test("should successfully retrieve waypoints for a map", async () => {
-      const mockWaypoints = [
-        { id: "wp1", name: "Waypoint 1" },
-        { id: "wp2", name: "Waypoint 2" }
-      ];
-      mockWaypointService.getWaypointsByMapId.mockResolvedValue(
-        Either.right(mockWaypoints)
-      );
-
-      await WaypointController.getWaypoints(mockWaypointService)(
-        mockReq,
-        mockRes,
-        mockNext
-      );
-
-      expect(mockWaypointService.getWaypointsByMapId).toHaveBeenCalledWith(
-        "test-map-id"
-      );
-      expect(mockRes.json).toHaveBeenCalledWith(mockWaypoints);
-    });
-
-    test("should handle map not found error when retrieving waypoints", async () => {
-      const error = new AppError("Map not found", 404);
-      mockWaypointService.getWaypointsByMapId.mockResolvedValue(
-        Either.left(error)
-      );
-
-      await WaypointController.getWaypoints(mockWaypointService)(
-        mockReq,
-        mockRes,
-        mockNext
-      );
+      await WaypointController.createWaypoint(mockWaypointService)(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
       expect(mockRes.json).not.toHaveBeenCalled();
     });
   });
 
-  describe("updateWaypoint", () => {
+  describe('getWaypoints', () => {
+    test('should successfully retrieve waypoints for a map', async () => {
+      const mockWaypoints = [
+        { id: 'wp1', name: 'Waypoint 1' },
+        { id: 'wp2', name: 'Waypoint 2' },
+      ];
+      mockWaypointService.getWaypointsByMapId.mockResolvedValue(Either.right(mockWaypoints));
+
+      await WaypointController.getWaypoints(mockWaypointService)(mockReq, mockRes, mockNext);
+
+      expect(mockWaypointService.getWaypointsByMapId).toHaveBeenCalledWith('test-map-id');
+      expect(mockRes.json).toHaveBeenCalledWith(mockWaypoints);
+    });
+
+    test('should handle map not found error when retrieving waypoints', async () => {
+      const error = new AppError('Map not found', 404);
+      mockWaypointService.getWaypointsByMapId.mockResolvedValue(Either.left(error));
+
+      await WaypointController.getWaypoints(mockWaypointService)(mockReq, mockRes, mockNext);
+
+      expect(mockNext).toHaveBeenCalledWith(error);
+      expect(mockRes.json).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateWaypoint', () => {
     const mockUpdateData = {
-      name: "Updated Waypoint",
-      coordinates: { lat: 40.7128, lng: -74.006 }
+      name: 'Updated Waypoint',
+      coordinates: { lat: 40.7128, lng: -74.006 },
     };
 
-    test("should successfully update a waypoint", async () => {
+    test('should successfully update a waypoint', async () => {
       mockReq.body = mockUpdateData;
-      const mockUpdatedWaypoint = { id: "test-waypoint-id", ...mockUpdateData };
-      mockWaypointService.updateWaypoint.mockResolvedValue(
-        Either.right(mockUpdatedWaypoint)
-      );
+      const mockUpdatedWaypoint = { id: 'test-waypoint-id', ...mockUpdateData };
+      mockWaypointService.updateWaypoint.mockResolvedValue(Either.right(mockUpdatedWaypoint));
 
-      await WaypointController.updateWaypoint(mockWaypointService)(
-        mockReq,
-        mockRes,
-        mockNext
-      );
+      await WaypointController.updateWaypoint(mockWaypointService)(mockReq, mockRes, mockNext);
 
       expect(mockWaypointService.updateWaypoint).toHaveBeenCalledWith(
-        "test-waypoint-id",
+        'test-waypoint-id',
         mockUpdateData
       );
       expect(mockRes.json).toHaveBeenCalledWith(mockUpdatedWaypoint);
     });
 
-    test("should handle waypoint not found error during update", async () => {
+    test('should handle waypoint not found error during update', async () => {
       mockReq.body = mockUpdateData;
-      const error = new AppError("Waypoint not found", 404);
+      const error = new AppError('Waypoint not found', 404);
       mockWaypointService.updateWaypoint.mockResolvedValue(Either.left(error));
 
-      await WaypointController.updateWaypoint(mockWaypointService)(
-        mockReq,
-        mockRes,
-        mockNext
-      );
+      await WaypointController.updateWaypoint(mockWaypointService)(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
       expect(mockRes.json).not.toHaveBeenCalled();
     });
 
-    test("should handle validation errors during update", async () => {
-      mockReq.body = { name: "" };
-      const error = new AppError("Invalid waypoint data", 400);
+    test('should handle validation errors during update', async () => {
+      mockReq.body = { name: '' };
+      const error = new AppError('Invalid waypoint data', 400);
       mockWaypointService.updateWaypoint.mockResolvedValue(Either.left(error));
 
-      await WaypointController.updateWaypoint(mockWaypointService)(
-        mockReq,
-        mockRes,
-        mockNext
-      );
+      await WaypointController.updateWaypoint(mockWaypointService)(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
       expect(mockRes.json).not.toHaveBeenCalled();
     });
   });
 
-  describe("deleteWaypoint", () => {
-    test("should successfully delete a waypoint", async () => {
+  describe('deleteWaypoint', () => {
+    test('should successfully delete a waypoint', async () => {
       mockWaypointService.deleteWaypoint.mockResolvedValue(Either.right(null));
 
-      await WaypointController.deleteWaypoint(mockWaypointService)(
-        mockReq,
-        mockRes,
-        mockNext
-      );
+      await WaypointController.deleteWaypoint(mockWaypointService)(mockReq, mockRes, mockNext);
 
-      expect(mockWaypointService.deleteWaypoint).toHaveBeenCalledWith(
-        "test-waypoint-id"
-      );
+      expect(mockWaypointService.deleteWaypoint).toHaveBeenCalledWith('test-waypoint-id');
       expect(mockRes.status).toHaveBeenCalledWith(204);
       expect(mockRes.json).toHaveBeenCalledWith(null);
     });
 
-    test("should handle waypoint not found error during deletion", async () => {
-      const error = new AppError("Waypoint not found", 404);
+    test('should handle waypoint not found error during deletion', async () => {
+      const error = new AppError('Waypoint not found', 404);
       mockWaypointService.deleteWaypoint.mockResolvedValue(Either.left(error));
 
-      await WaypointController.deleteWaypoint(mockWaypointService)(
-        mockReq,
-        mockRes,
-        mockNext
-      );
+      await WaypointController.deleteWaypoint(mockWaypointService)(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
       expect(mockRes.json).not.toHaveBeenCalled();
     });
 
-    test("should handle unauthorized deletion attempt", async () => {
-      const error = new AppError("Unauthorized to delete waypoint", 403);
+    test('should handle unauthorized deletion attempt', async () => {
+      const error = new AppError('Unauthorized to delete waypoint', 403);
       mockWaypointService.deleteWaypoint.mockResolvedValue(Either.left(error));
 
-      await WaypointController.deleteWaypoint(mockWaypointService)(
-        mockReq,
-        mockRes,
-        mockNext
-      );
+      await WaypointController.deleteWaypoint(mockWaypointService)(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledWith(error);
       expect(mockRes.json).not.toHaveBeenCalled();

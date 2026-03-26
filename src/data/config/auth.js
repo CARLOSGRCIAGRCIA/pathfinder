@@ -1,8 +1,12 @@
-import jwt from "jsonwebtoken";
-import environment from "./environment";
+import jwt from 'jsonwebtoken';
+import environment from './environment';
 
 const TokenService = {
-  generateToken: (userId, secret = environment.JWT_SECRET, expiresIn = environment.JWT_EXPIRES_IN) => {
+  generateToken: (
+    userId,
+    secret = environment.JWT_SECRET,
+    expiresIn = environment.JWT_EXPIRES_IN
+  ) => {
     return jwt.sign({ userId }, secret, { expiresIn });
   },
 

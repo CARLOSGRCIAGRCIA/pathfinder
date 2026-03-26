@@ -1,7 +1,7 @@
 import { AppError } from '../../business/utils/errorUtils.js';
 
 const MapController = {
-  getAllMaps: (mapService) => async (req, res, next) => {
+  getAllMaps: mapService => async (req, res, next) => {
     const { page = 1, limit = 10, name } = req.query;
     const userId = req.user._id;
     const result = await mapService.getMaps({ page, limit, name }, userId);
@@ -12,7 +12,7 @@ const MapController = {
     );
   },
 
-  createMap: (mapService) => async (req, res, next) => {
+  createMap: mapService => async (req, res, next) => {
     const mapData = { ...req.body, creator: req.user._id };
     const result = await mapService.createMap(mapData);
 
@@ -22,7 +22,7 @@ const MapController = {
     );
   },
 
-  getMap: (mapService) => async (req, res, next) => {
+  getMap: mapService => async (req, res, next) => {
     const userId = req.user._id;
     const result = await mapService.getMap(req.params.mapId, userId);
 
@@ -32,7 +32,7 @@ const MapController = {
     );
   },
 
-  updateMap: (mapService) => async (req, res, next) => {
+  updateMap: mapService => async (req, res, next) => {
     const userId = req.user._id;
     const result = await mapService.updateMap(req.params.mapId, req.body, userId);
 
@@ -42,7 +42,7 @@ const MapController = {
     );
   },
 
-  deleteMap: (mapService) => async (req, res, next) => {
+  deleteMap: mapService => async (req, res, next) => {
     const userId = req.user._id;
     const result = await mapService.deleteMap(req.params.mapId, userId);
 
@@ -50,7 +50,7 @@ const MapController = {
       error => next(error),
       () => res.status(204).send()
     );
-  }
+  },
 };
 
 export default MapController;

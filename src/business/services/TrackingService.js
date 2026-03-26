@@ -1,5 +1,5 @@
-import TrackingRepository from "../../data/repositories/trackingRepository.js";
-import { Either } from "../utils/either/Either.js";
+import TrackingRepository from '../../data/repositories/trackingRepository.js';
+import { Either } from '../utils/either/Either.js';
 
 const TrackingService = {
   getRequestStats: async userId => {
@@ -20,7 +20,7 @@ const TrackingService = {
 
   addTrackingRecord: async trackingData => {
     return await TrackingRepository.addTrackingRecord(trackingData);
-  }
+  },
 };
 
 export default TrackingService;

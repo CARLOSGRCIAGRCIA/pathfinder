@@ -17,9 +17,12 @@ describe('validateMapData', () => {
     const mapData = { width: 100, height: 100 };
     const result = validateMapData(mapData);
     expect(result.isLeft()).toBe(true);
-    expect(result.fold((e) => e.message, () => null)).toBe(
-      'Missing required field: start'
-    );
+    expect(
+      result.fold(
+        e => e.message,
+        () => null
+      )
+    ).toBe('Missing required field: start');
   });
 
   it('should return a Left if start point is out of bounds', () => {
@@ -31,9 +34,12 @@ describe('validateMapData', () => {
     };
     const result = validateMapData(mapData);
     expect(result.isLeft()).toBe(true);
-    expect(result.fold((e) => e.message, () => null)).toBe(
-      'Start point at (-1, 0) is out of bounds'
-    );
+    expect(
+      result.fold(
+        e => e.message,
+        () => null
+      )
+    ).toBe('Start point at (-1, 0) is out of bounds');
   });
 
   it('should return a Left if end point is out of bounds', () => {
@@ -45,9 +51,12 @@ describe('validateMapData', () => {
     };
     const result = validateMapData(mapData);
     expect(result.isLeft()).toBe(true);
-    expect(result.fold((e) => e.message, () => null)).toBe(
-      'End point at (100, 100) is out of bounds'
-    );
+    expect(
+      result.fold(
+        e => e.message,
+        () => null
+      )
+    ).toBe('End point at (100, 100) is out of bounds');
   });
 
   it('should return a Left if map dimensions are invalid', () => {
@@ -59,8 +68,11 @@ describe('validateMapData', () => {
     };
     const result = validateMapData(mapData);
     expect(result.isLeft()).toBe(true);
-    expect(result.fold((e) => e.message, () => null)).toBe(
-      'Map dimensions must be between 50 and 500'
-    );
+    expect(
+      result.fold(
+        e => e.message,
+        () => null
+      )
+    ).toBe('Map dimensions must be between 50 and 500');
   });
 });

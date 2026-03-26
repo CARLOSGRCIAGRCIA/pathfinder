@@ -4,21 +4,21 @@ import JwtTokenStrategy from '../strategies/JwtTokenStrategy.js';
 import RefreshTokenStrategy from '../strategies/RefreshTokenStrategy.js';
 
 const createAuthService = (tokenStrategy, refreshTokenStrategy) => ({
-  generateToken: (userId) => tokenStrategy.generateToken(userId),
+  generateToken: userId => tokenStrategy.generateToken(userId),
 
-  generateRefreshToken: (userId) => refreshTokenStrategy.generateToken(userId),
+  generateRefreshToken: userId => refreshTokenStrategy.generateToken(userId),
 
-  verifyToken: (token) => tokenStrategy.verifyToken(token),
+  verifyToken: token => tokenStrategy.verifyToken(token),
 
-  refreshToken: async (refreshToken) => {
+  refreshToken: async refreshToken => {
     if (!refreshToken) {
-      return Either.left(AppError('Refresh token is required', 400));
+      return Either.left(new AppError('Refresh token is required', 400));
     }
 
     const decodedResult = await refreshTokenStrategy.verifyToken(refreshToken);
-    return decodedResult.flatMap(async (decoded) => {
+    return decodedResult.flatMap(async decoded => {
       const newAccessTokenResult = await tokenStrategy.generateToken(decoded.userId);
-      return newAccessTokenResult.map((newAccessToken) => ({
+      return newAccessTokenResult.map(newAccessToken => ({
         accessToken: newAccessToken,
         refreshToken,
       }));
