@@ -21,6 +21,10 @@ router.post('/register', validate(userValidation), registerUser);
 
 router.post('/login', validate(userValidation), loginUser);
 
+router.post('/logout', auth, (req, res) => {
+  res.json({ success: true, message: 'Logged out successfully' });
+});
+
 router.post('/refresh-token', refreshUserTokenHandler);
 
 router.get('/me', auth, getUserProfile);
