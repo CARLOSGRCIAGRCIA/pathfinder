@@ -1,95 +1,143 @@
 import { Either } from '../utils/either/Either.js';
 import { findOptimalPath } from '../services/pathFinderService.js';
+import routeCacheService from '../services/routeCacheService.js';
 
-const DefaultRouteStrategy = (mapRepository, obstacleRepository, waypointRepository, routeRepository) => {
-    const strategy = {
-        create: async (mapId, path, distance, createdBy) => {
-            const routeData = {
-                mapId,
-                start: path[0],
-                end: path[path.length - 1],
-                path,
-                distance,
-                createdBy
-            };
-            
-            return routeRepository.create(routeData);
-        },
+const DefaultRouteStrategy = (
+  mapRepository,
+  obstacleRepository,
+  waypointRepository,
+  routeRepository
+) => {
+  const strategy = {
+    create: async (mapId, path, distance, createdBy, cost = null) => {
+      const routeData = {
+        mapId,
+        start: path[0],
+        end: path[path.length - 1],
+        path,
+        distance,
+        cost,
+        createdBy,
+      };
 
-        validateMapConfiguration: async (mapId) => {
-            const obstaclesResult = await obstacleRepository.findByMapId(mapId);
-            if (obstaclesResult.isLeft()) return Either.left('Error fetching obstacles');
-            const obstacles = obstaclesResult.getOrElse([]);
+      return routeRepository.create(routeData);
+    },
 
-            const waypointsResult = await waypointRepository.findByMapId(mapId);
-            if (waypointsResult.isLeft()) return Either.left('Error fetching waypoints');
-            const waypoints = waypointsResult.getOrElse([]);
+    validateMapConfiguration: async mapId => {
+      const obstaclesResult = await obstacleRepository.findByMapId(mapId);
+      if (obstaclesResult.isLeft()) return Either.left('Error fetching obstacles');
+      const obstacles = obstaclesResult.getOrElse([]);
 
-            if (obstacles.length === 0) {
-                return Either.left('The map must have at least one obstacle');
-            }
+      const waypointsResult = await waypointRepository.findByMapId(mapId);
+      if (waypointsResult.isLeft()) return Either.left('Error fetching waypoints');
+      const waypoints = waypointsResult.getOrElse([]);
 
-            if (waypoints.length === 0) {
-                return Either.left('The map must have at least one waypoint');
-            }
+      if (obstacles.length === 0) {
+        return Either.left('The map must have at least one obstacle');
+      }
 
-            return Either.right({ obstacles, waypoints });
-        },
+      if (waypoints.length === 0) {
+        return Either.left('The map must have at least one waypoint');
+      }
 
-        findOptimalRoute: async (mapId, body, user) => {
-            const { start, end, waypoints: waypointsFromBody, userPreferences } = body;
+      return Either.right({ obstacles, waypoints });
+    },
 
-            if (!start || !end) return Either.left('Start and end points are required');
+    findOptimalRoute: async (mapId, body, user) => {
+      const {
+        start,
+        end,
+        waypoints: waypointsFromBody,
+        userPreferences,
+        useCache = true,
+        terrainGrid,
+        cacheTTL = 24,
+      } = body;
 
-            const mapResult = await mapRepository.findById(mapId, user._id);
-            if (mapResult.isLeft()) return Either.left('Map not found or you have no permission to access this map');
-            const map = mapResult.getOrElse(null);
+      if (!start || !end) return Either.left('Start and end points are required');
 
-            const validationResult = await strategy.validateMapConfiguration(mapId);
-            if (validationResult.isLeft()) {
-                return validationResult;
-            }
+      const mapResult = await mapRepository.findById(mapId, user._id);
+      if (mapResult.isLeft())
+        return Either.left('Map not found or you have no permission to access this map');
+      const map = mapResult.getOrElse(null);
 
-            const { obstacles, waypoints: waypointsFromDB } = validationResult.getOrElse({});
+      const validationResult = await strategy.validateMapConfiguration(mapId);
+      if (validationResult.isLeft()) {
+        return validationResult;
+      }
 
-            const waypoints = waypointsFromBody || waypointsFromDB;
+      const { obstacles, waypoints: waypointsFromDB } = validationResult.getOrElse({});
+      const waypoints = waypointsFromBody || waypointsFromDB;
 
-            const pathResult = await findOptimalPath(
-                start,
-                end,
-                obstacles,
-                waypoints,
-                map.width,
-                map.height,
-                userPreferences,
-            );
+      const cacheParams = {
+        start,
+        end,
+        waypoints,
+        obstacles,
+        width: map.width,
+        height: map.height,
+        terrainGrid,
+      };
 
-            if (pathResult.isLeft()) {
-                return pathResult;
-            }
+      if (useCache) {
+        const cachedResult = await routeCacheService.getCachedRoute(cacheParams);
+        if (cachedResult.isRight()) {
+          const cached = cachedResult.getOrElse({});
+          console.log(`Route cache hit! Distance: ${cached.distance}, Hits: ${cached.hits}`);
 
-            const { path, distance } = pathResult.getOrElse({});
-            return strategy.create(mapId, path, distance, user._id);
-        },
-
-        findAll: async () => {
-            return routeRepository.findAll();
-        },
-        
-        findByMapId: async (mapId) => {
-            return routeRepository.findByMapId(mapId);
-        },
-
-        findById: async (routeId) => {
-            return routeRepository.findById(routeId);
-        },
-
-        delete: async (routeId) => {
-            return routeRepository.delete(routeId);
+          return Either.right({
+            path: cached.path,
+            distance: cached.distance,
+            cost: cached.cost,
+            cached: true,
+            hits: cached.hits,
+          });
         }
-    };
+      }
 
-    return strategy;
+      const pathResult = await findOptimalPath(
+        start,
+        end,
+        obstacles,
+        waypoints,
+        map.width,
+        map.height,
+        userPreferences,
+        1,
+        terrainGrid
+      );
+
+      if (pathResult.isLeft()) {
+        return pathResult;
+      }
+
+      const { path, distance, cost } = pathResult.getOrElse({});
+
+      if (useCache && path.length > 0) {
+        await routeCacheService.setCachedRoute(cacheParams, { path, distance, cost }, cacheTTL);
+      }
+
+      return strategy.create(mapId, path, distance, user._id, cost);
+    },
+
+    findAll: async () => {
+      return routeRepository.findAll();
+    },
+
+    findByMapId: async mapId => {
+      return routeRepository.findByMapId(mapId);
+    },
+
+    findById: async routeId => {
+      return routeRepository.findById(routeId);
+    },
+
+    delete: async routeId => {
+      return routeRepository.delete(routeId);
+    },
+  };
+
+  return strategy;
 };
 
 export default DefaultRouteStrategy;

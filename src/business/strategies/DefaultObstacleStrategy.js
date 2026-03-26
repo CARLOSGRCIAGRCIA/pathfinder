@@ -8,14 +8,14 @@ const DefaultObstacleStrategy = {
   },
 
   createMultiple: async (mapId, obstaclesData) => {
-    const obstaclesWithMap = obstaclesData.map((obstacle) => ({
+    const obstaclesWithMap = obstaclesData.map(obstacle => ({
       ...obstacle,
       map: mapId,
     }));
     return ObstacleRepository.createMultiple(obstaclesWithMap);
   },
 
-  findByMapId: async (mapId) => {
+  findByMapId: async mapId => {
     return ObstacleRepository.findByMapId(mapId);
   },
 
@@ -23,7 +23,7 @@ const DefaultObstacleStrategy = {
     return ObstacleRepository.update(obstacleId, obstacleData);
   },
 
-  delete: async (obstacleId) => {
+  delete: async obstacleId => {
     return ObstacleRepository.delete(obstacleId);
   },
 };

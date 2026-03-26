@@ -1,5 +1,5 @@
-import { Either } from "../utils/either/Either.js";
-import WaypointRepository from "../../data/repositories/waypointRepository.js";
+import { Either } from '../utils/either/Either.js';
+import WaypointRepository from '../../data/repositories/waypointRepository.js';
 
 const DefaultWaypointStrategy = {
   create: async (mapId, waypointData) => {
@@ -10,7 +10,7 @@ const DefaultWaypointStrategy = {
   createMultiple: async (mapId, waypointsData) => {
     const waypointsWithMap = waypointsData.map(waypoint => ({
       ...waypoint,
-      map: mapId
+      map: mapId,
     }));
     return WaypointRepository.createMultiple(waypointsWithMap);
   },
@@ -25,7 +25,7 @@ const DefaultWaypointStrategy = {
 
   delete: async waypointId => {
     return WaypointRepository.delete(waypointId);
-  }
+  },
 };
 
 export default DefaultWaypointStrategy;

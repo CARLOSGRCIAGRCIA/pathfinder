@@ -1,10 +1,10 @@
-const createLRUCache = (maxSize) => {
+const createLRUCache = maxSize => {
   const cache = new Map();
   const order = new Map();
   const timeouts = new Map();
   let counter = 0;
 
-  const clearKey = (key) => {
+  const clearKey = key => {
     if (cache.has(key)) {
       cache.delete(key);
       order.delete(key);
@@ -15,7 +15,7 @@ const createLRUCache = (maxSize) => {
     }
   };
 
-  const setExpirationTimer = (key) => {
+  const setExpirationTimer = key => {
     if (timeouts.has(key)) {
       clearTimeout(timeouts.get(key));
     }
@@ -23,7 +23,7 @@ const createLRUCache = (maxSize) => {
     timeouts.set(key, timeoutId);
   };
 
-  const get = (key) => {
+  const get = key => {
     if (cache.has(key)) {
       order.set(key, counter++);
       setExpirationTimer(key);
@@ -34,8 +34,7 @@ const createLRUCache = (maxSize) => {
 
   const set = (key, value) => {
     if (cache.size >= maxSize && !cache.has(key)) {
-      const lruKey = Array.from(order.entries())
-        .reduce((a, b) => (a[1] < b[1] ? a : b))[0];
+      const lruKey = Array.from(order.entries()).reduce((a, b) => (a[1] < b[1] ? a : b))[0];
       clearKey(lruKey);
     }
     cache.set(key, value);
@@ -57,7 +56,11 @@ const memoizeFindOptimalPath = (func, cacheSize = 100) => {
   const cache = createLRUCache(cacheSize);
 
   return function (start, end, obstacles, waypoints, width, height, userPreferences) {
-    const serializePoints = (points) => points.map((p) => `${p.x},${p.y}`).sort().join(";");
+    const serializePoints = points =>
+      points
+        .map(p => `${p.x},${p.y}`)
+        .sort()
+        .join(';');
 
     const keyParts = [
       `${start.x},${start.y}`,
@@ -68,7 +71,7 @@ const memoizeFindOptimalPath = (func, cacheSize = 100) => {
       height,
     ];
 
-    const key = keyParts.join("|");
+    const key = keyParts.join('|');
 
     const cachedResult = cache.get(key);
     if (cachedResult !== undefined) {

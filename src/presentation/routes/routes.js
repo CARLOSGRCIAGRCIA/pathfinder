@@ -1,4 +1,4 @@
-import express from "express";
+import express from 'express';
 import {
   validate,
   validateIdFormat,
@@ -9,15 +9,15 @@ import {
   validateOptimalRoute,
   validateInput,
   validateLargeMap,
-} from "../../business/utils/validationUtils.js";
-import RouteController from "../controllers/routeController.js";
-import createRouteService from "../../business/services/routeService.js";
-import RouteRepository from "../../data/repositories/routeRepository.js";
-import MapRepository from "../../data/repositories/mapRepository.js";
-import ObstacleRepository from "../../data/repositories/obstacleRepository.js";
-import WaypointRepository from "../../data/repositories/waypointRepository.js";
-import { auth } from "../middleware/auth.js";
-import { injectUserId } from "../middleware/injectUserId.js";
+} from '../../business/utils/validationUtils.js';
+import RouteController from '../controllers/routeController.js';
+import createRouteService from '../../business/services/routeService.js';
+import RouteRepository from '../../data/repositories/routeRepository.js';
+import MapRepository from '../../data/repositories/mapRepository.js';
+import ObstacleRepository from '../../data/repositories/obstacleRepository.js';
+import WaypointRepository from '../../data/repositories/waypointRepository.js';
+import { auth } from '../middleware/auth.js';
+import { injectUserId } from '../middleware/injectUserId.js';
 
 const router = express.Router();
 
@@ -33,21 +33,53 @@ const routeService = createRouteService(
   waypointRepository
 );
 
-router.post(
-  "/validateMap/:mapId",
-  validate([validateIdFormat("mapId")]),
-  async (req, res) => {
-    const result = await validateStoppingPoints(req.params.mapId);
-    result.fold(
-      error => res.status(400).json(error),
-      success => res.status(200).json(success)
-    );
-  }
-);
+/**
+ * @swagger
+ * /routes/validateMap/{mapId}:
+ *   post:
+ *     tags: [Routes]
+ *     summary: Validate map stopping points
+ *     parameters:
+ *       - in: path
+ *         name: mapId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Validation successful
+ *       400:
+ *         description: Validation error
+ */
+router.post('/validateMap/:mapId', validate([validateIdFormat('mapId')]), async (req, res) => {
+  const result = await validateStoppingPoints(req.params.mapId);
+  result.fold(
+    error => res.status(400).json(error),
+    success => res.status(200).json(success)
+  );
+});
 
+/**
+ * @swagger
+ * /routes/checkReachability/{mapId}:
+ *   post:
+ *     tags: [Routes]
+ *     summary: Check if all points are reachable
+ *     parameters:
+ *       - in: path
+ *         name: mapId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Check successful
+ *       400:
+ *         description: Check failed
+ */
 router.post(
-  "/checkReachability/:mapId",
-  validate([validateIdFormat("mapId")]),
+  '/checkReachability/:mapId',
+  validate([validateIdFormat('mapId')]),
   async (req, res) => {
     const result = await checkReachability(req.params.mapId);
     result.fold(
@@ -57,85 +89,125 @@ router.post(
   }
 );
 
+/**
+ * @swagger
+ * /routes/{mapId}:
+ *   post:
+ *     tags: [Routes]
+ *     summary: Find optimal route for a map
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: mapId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Optimal route found
+ *       400:
+ *         description: Error finding route
+ *       401:
+ *         description: Unauthorized
+ */
 router.post(
-  "/validateComplexGeometry/:mapId",
-  validate([validateIdFormat("mapId")]),
-  async (req, res) => {
-    const result = await validateComplexGeometry(req.params.mapId);
-    result.fold(
-      error => res.status(400).json(error),
-      success => res.status(200).json(success)
-    );
-  }
-);
-
-router.post(
-  "/validateAllRoutes/:mapId",
-  validate([validateIdFormat("mapId")]),
-  async (req, res) => {
-    const result = await validateAllRoutes(req.params.mapId);
-    result.fold(
-      error => res.status(400).json(error),
-      success => res.status(200).json(success)
-    );
-  }
-);
-
-router.post(
-  "/validateOptimalRoute/:mapId",
-  validate([validateIdFormat("mapId")]),
-  async (req, res) => {
-    const result = await validateOptimalRoute(req.params.mapId);
-    result.fold(
-      error => res.status(400).json(error),
-      success => res.status(200).json(success)
-    );
-  }
-);
-
-router.post(
-  "/validateInput/:mapId",
-  validate([validateIdFormat("mapId")]),
-  async (req, res) => {
-    const result = await validateInput(req.params.mapId);
-    result.fold(
-      error => res.status(400).json(error),
-      success => res.status(200).json(success)
-    );
-  }
-);
-
-router.post(
-  "/validateLargeMap/:mapId",
-  validate([validateIdFormat("mapId")]),
-  async (req, res) => {
-    const result = await validateLargeMap(req.params.mapId);
-    result.fold(
-      error => res.status(400).json(error),
-      success => res.status(200).json(success)
-    );
-  }
-);
-
-router.post(
-  "/:mapId",
+  '/:mapId',
   auth,
   injectUserId(),
-  validate([validateIdFormat("mapId")]),
+  validate([validateIdFormat('mapId')]),
   RouteController.findOptimalRoute(routeService)
 );
 
-// Nuevo endpoint para obtener rutas por mapId
+/**
+ * @swagger
+ * /routes/map/{mapId}:
+ *   get:
+ *     tags: [Routes]
+ *     summary: Get routes by map ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: mapId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of routes
+ *       401:
+ *         description: Unauthorized
+ */
 router.get(
-  "/map/:mapId", 
-  auth, 
-  validate([validateIdFormat("mapId")]),
+  '/map/:mapId',
+  auth,
+  validate([validateIdFormat('mapId')]),
   RouteController.getRoutesByMapId(routeService)
 );
 
-// Mantener endpoints existentes
-router.get("/", auth, RouteController.getAllRoutes(routeService));
-router.get("/:routeId", auth, RouteController.getRoute(routeService));
-router.delete("/:routeId", auth, RouteController.deleteRoute(routeService));
+/**
+ * @swagger
+ * /routes:
+ *   get:
+ *     tags: [Routes]
+ *     summary: Get all routes
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all routes
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/', auth, RouteController.getAllRoutes(routeService));
+
+/**
+ * @swagger
+ * /routes/{routeId}:
+ *   get:
+ *     tags: [Routes]
+ *     summary: Get a route by ID
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: routeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Route data
+ *       404:
+ *         description: Route not found
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/:routeId', auth, RouteController.getRoute(routeService));
+
+/**
+ * @swagger
+ * /routes/{routeId}:
+ *   delete:
+ *     tags: [Routes]
+ *     summary: Delete a route
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: routeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       204:
+ *         description: Route deleted
+ *       404:
+ *         description: Route not found
+ *       401:
+ *         description: Unauthorized
+ */
+router.delete('/:routeId', auth, RouteController.deleteRoute(routeService));
 
 export default router;

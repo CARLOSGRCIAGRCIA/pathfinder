@@ -1,5 +1,5 @@
-import { Either } from "../../business/utils/either/Either.js";
-import TrackingService from "../../business/services/TrackingService.js";
+import { Either } from '../../business/utils/either/Either.js';
+import TrackingService from '../../business/services/TrackingService.js';
 
 const TrackingController = {
   getRequestStats: async (req, res) => {
@@ -7,10 +7,10 @@ const TrackingController = {
 
     const result = await TrackingService.getRequestStats(userId);
     result.fold(
-      (error) => {
+      error => {
         res.status(500).json({ message: error.message });
       },
-      (stats) => {
+      stats => {
         res.json(stats);
       }
     );
@@ -20,10 +20,10 @@ const TrackingController = {
     const userId = req.user._id;
     const result = await TrackingService.getResponseTimes(userId);
     result.fold(
-      (error) => {
+      error => {
         res.status(500).json({ message: error.message });
       },
-      (responseTimes) => {
+      responseTimes => {
         res.json(responseTimes);
       }
     );
@@ -34,10 +34,10 @@ const TrackingController = {
 
     const result = await TrackingService.getStatusCodes(userId);
     result.fold(
-      (error) => {
+      error => {
         res.status(500).json({ message: error.message });
       },
-      (statusCodes) => {
+      statusCodes => {
         res.json(statusCodes);
       }
     );
@@ -47,10 +47,10 @@ const TrackingController = {
     const userId = req.user._id;
     const result = await TrackingService.getPopularEndpoints(userId);
     result.fold(
-      (error) => {
+      error => {
         res.status(500).json({ message: error.message });
       },
-      (popularEndpoints) => {
+      popularEndpoints => {
         res.json(popularEndpoints);
       }
     );
@@ -63,14 +63,14 @@ const TrackingController = {
     };
     const result = await TrackingService.addTrackingRecord(trackingData);
     result.fold(
-      (error) => {
+      error => {
         res.status(500).json({ message: error.message });
       },
-      (newRecord) => {
+      newRecord => {
         res.status(201).json(newRecord);
       }
     );
-  }
+  },
 };
 
 export default TrackingController;

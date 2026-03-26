@@ -3,10 +3,10 @@
  * @param {*} response - The response data to cache
  * @returns {Object} Cache entry with response and timestamp
  */
-const createCacheEntry = (response) => ({
+const createCacheEntry = response => ({
   response,
   timestamp: Date.now(),
-  lastAccessed: Date.now()
+  lastAccessed: Date.now(),
 });
 
 /**
@@ -15,17 +15,16 @@ const createCacheEntry = (response) => ({
  * @param {number} maxAge - Maximum age in milliseconds
  * @returns {boolean} Whether the entry has expired
  */
-const isExpired = (entry, maxAge) => 
-  Date.now() - entry.timestamp > maxAge;
+const isExpired = (entry, maxAge) => Date.now() - entry.timestamp > maxAge;
 
 /**
  * Updates the last accessed time for a cache entry
  * @param {Object} entry - Cache entry to update
  * @returns {Object} New cache entry with updated lastAccessed
  */
-const updateAccessTime = (entry) => ({
+const updateAccessTime = entry => ({
   ...entry,
-  lastAccessed: Date.now()
+  lastAccessed: Date.now(),
 });
 
 /**
@@ -36,11 +35,11 @@ const updateAccessTime = (entry) => ({
  */
 const enforceCacheLimit = (cache, maxSize) => {
   if (cache.size <= maxSize) return cache;
-  
+
   const entries = Array.from(cache.entries())
     .sort(([, a], [, b]) => b.lastAccessed - a.lastAccessed)
     .slice(0, maxSize);
-  
+
   return new Map(entries);
 };
 
@@ -49,8 +48,7 @@ const enforceCacheLimit = (cache, maxSize) => {
  * @param {Object} req - Express request object
  * @returns {string} Cache key
  */
-const generateCacheKey = (req) => 
-  `${req.method}:${req.originalUrl}`;
+const generateCacheKey = req => `${req.method}:${req.originalUrl}`;
 
 /**
  * Creates a caching middleware with functional programming principles
@@ -71,7 +69,7 @@ export const createCacheMiddleware = ({ max = 50, maxAge = 30000 }) => {
 
     if (cacheStore.has(cacheKey)) {
       const entry = cacheStore.get(cacheKey);
-      
+
       if (!isExpired(entry, maxAge)) {
         const updatedEntry = updateAccessTime(entry);
         cacheStore = new Map(cacheStore.set(cacheKey, updatedEntry));
@@ -82,13 +80,13 @@ export const createCacheMiddleware = ({ max = 50, maxAge = 30000 }) => {
     }
 
     const originalSend = res.send;
-    res.send = function(body) {
+    res.send = function (body) {
       const newEntry = createCacheEntry(body);
-      
+
       cacheStore = new Map([...cacheStore, [cacheKey, newEntry]]);
-      
+
       cacheStore = enforceCacheLimit(cacheStore, max);
-      
+
       return originalSend.call(this, body);
     };
 
