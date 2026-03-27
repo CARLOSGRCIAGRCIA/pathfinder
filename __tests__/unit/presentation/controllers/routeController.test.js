@@ -46,16 +46,19 @@ describe('RouteController', () => {
   describe('findOptimalRoute', () => {
     it('should find optimal route successfully', async () => {
       const mockRoute = {
-        id: 'route123',
-        startPoint: mockReq.body.startPoint,
-        endPoint: mockReq.body.endPoint,
+        _id: 'route123',
+        mapId: 'map123',
+        start: mockReq.body.startPoint,
+        end: mockReq.body.endPoint,
         path: [
           { x: 0, y: 0 },
           { x: 50, y: 50 },
           { x: 100, y: 100 },
         ],
         distance: 141.42,
-        estimatedTime: 180,
+        cost: 10,
+        createdBy: 'user123',
+        createdAt: new Date(),
       };
       mockRouteService.findOptimalRoute.mockResolvedValue(Either.right(mockRoute));
 

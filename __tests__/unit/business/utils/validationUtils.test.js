@@ -52,7 +52,7 @@ describe('validationUtils', () => {
 
   describe('obstacleValidation', () => {
     it('should validate obstacle fields correctly', async () => {
-      const mockReq = { body: [{ x: 1, y: 2 }] };
+      const mockReq = { body: { obstacles: [{ x: 1, y: 2 }] } };
       const mockRes = {};
       const mockNext = jest.fn();
 
@@ -61,7 +61,7 @@ describe('validationUtils', () => {
     });
 
     it('should return error if x is not a non-negative integer', async () => {
-      const mockReq = { body: [{ x: -1, y: 2 }] };
+      const mockReq = { body: { obstacles: [{ x: -1, y: 2 }] } };
       const mockRes = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
@@ -78,7 +78,7 @@ describe('validationUtils', () => {
     });
 
     it('should return error if y is not a non-negative integer', async () => {
-      const mockReq = { body: [{ x: 1, y: -2 }] };
+      const mockReq = { body: { obstacles: [{ x: 1, y: -2 }] } };
       const mockRes = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
@@ -95,7 +95,7 @@ describe('validationUtils', () => {
     });
 
     it('should return error if size is not between 1 and 3', async () => {
-      const mockReq = { body: [{ x: 1, y: 2, size: 4 }] };
+      const mockReq = { body: { obstacles: [{ x: 1, y: 2, size: 4 }] } };
       const mockRes = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
@@ -114,7 +114,7 @@ describe('validationUtils', () => {
 
   describe('waypointValidation', () => {
     it('should validate waypoint fields correctly', async () => {
-      const mockReq = { body: [{ x: 1, y: 2, name: 'Waypoint 1' }] };
+      const mockReq = { body: { waypoints: [{ x: 1, y: 2, name: 'Waypoint 1' }] } };
       const mockRes = {};
       const mockNext = jest.fn();
 
@@ -123,7 +123,7 @@ describe('validationUtils', () => {
     });
 
     it('should return error if x is not a non-negative integer', async () => {
-      const mockReq = { body: [{ x: -1, y: 2, name: 'Waypoint 1' }] };
+      const mockReq = { body: { waypoints: [{ x: -1, y: 2, name: 'Waypoint 1' }] } };
       const mockRes = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
@@ -140,7 +140,7 @@ describe('validationUtils', () => {
     });
 
     it('should return error if y is not a non-negative integer', async () => {
-      const mockReq = { body: [{ x: 1, y: -2, name: 'Waypoint 1' }] };
+      const mockReq = { body: { waypoints: [{ x: 1, y: -2, name: 'Waypoint 1' }] } };
       const mockRes = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),
@@ -157,7 +157,7 @@ describe('validationUtils', () => {
     });
 
     it('should return error if name is missing', async () => {
-      const mockReq = { body: [{ x: 1, y: 2 }] };
+      const mockReq = { body: { waypoints: [{ x: 1, y: 2 }] } };
       const mockRes = {
         status: jest.fn().mockReturnThis(),
         json: jest.fn(),

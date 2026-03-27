@@ -55,7 +55,7 @@ export const waypointValidation = [
     .optional()
     .isInt({ min: 0 })
     .withMessage('Y must be a non-negative integer'),
-  body('waypoints.*.name').optional().isString().trim().notEmpty().withMessage('Name is required'),
+  body('waypoints.*.name').isString().trim().notEmpty().withMessage('Name is required'),
 ];
 export const validateWaypoints = [
   body('x').isInt({ min: 0 }).withMessage('X must be a non-negative integer'),
