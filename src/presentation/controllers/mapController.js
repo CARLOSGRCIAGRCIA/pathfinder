@@ -1,4 +1,5 @@
 import { AppError } from '../../business/utils/errorUtils.js';
+import socketService from '../socket/socketService.js';
 
 const MapController = {
   getAllMaps: mapService => async (req, res, next) => {
@@ -18,7 +19,10 @@ const MapController = {
 
     result.fold(
       error => next(error),
-      newMap => res.status(201).json(newMap)
+      newMap => {
+        socketService.emitMapCreated(newMap);
+        res.status(201).json(newMap);
+      }
     );
   },
 
@@ -38,17 +42,24 @@ const MapController = {
 
     result.fold(
       error => next(error),
-      updatedMap => res.json(updatedMap)
+      updatedMap => {
+        socketService.emitMapUpdated(updatedMap);
+        res.json(updatedMap);
+      }
     );
   },
 
   deleteMap: mapService => async (req, res, next) => {
     const userId = req.user._id;
-    const result = await mapService.deleteMap(req.params.mapId, userId);
+    const mapId = req.params.mapId;
+    const result = await mapService.deleteMap(mapId, userId);
 
     result.fold(
       error => next(error),
-      () => res.status(204).send()
+      () => {
+        socketService.emitMapDeleted(mapId);
+        res.status(204).send();
+      }
     );
   },
 };

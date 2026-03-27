@@ -1,6 +1,7 @@
 import { Either } from '../utils/either/Either.js';
 import { findOptimalPath } from '../services/pathFinderService.js';
 import routeCacheService from '../services/routeCacheService.js';
+import mongoose from 'mongoose';
 
 const DefaultRouteStrategy = (
   mapRepository,
@@ -11,13 +12,13 @@ const DefaultRouteStrategy = (
   const strategy = {
     create: async (mapId, path, distance, createdBy, cost = null) => {
       const routeData = {
-        mapId,
+        mapId: new mongoose.Types.ObjectId(mapId),
         start: path[0],
         end: path[path.length - 1],
         path,
         distance,
         cost,
-        createdBy,
+        createdBy: new mongoose.Types.ObjectId(createdBy),
       };
 
       return routeRepository.create(routeData);
@@ -31,14 +32,6 @@ const DefaultRouteStrategy = (
       const waypointsResult = await waypointRepository.findByMapId(mapId);
       if (waypointsResult.isLeft()) return Either.left('Error fetching waypoints');
       const waypoints = waypointsResult.getOrElse([]);
-
-      if (obstacles.length === 0) {
-        return Either.left('The map must have at least one obstacle');
-      }
-
-      if (waypoints.length === 0) {
-        return Either.left('The map must have at least one waypoint');
-      }
 
       return Either.right({ obstacles, waypoints });
     },
@@ -83,15 +76,14 @@ const DefaultRouteStrategy = (
         const cachedResult = await routeCacheService.getCachedRoute(cacheParams);
         if (cachedResult.isRight()) {
           const cached = cachedResult.getOrElse({});
-          console.log(`Route cache hit! Distance: ${cached.distance}, Hits: ${cached.hits}`);
-
-          return Either.right({
-            path: cached.path,
-            distance: cached.distance,
-            cost: cached.cost,
-            cached: true,
-            hits: cached.hits,
-          });
+          const createdRoute = await strategy.create(
+            mapId,
+            cached.path,
+            cached.distance,
+            user._id,
+            cached.cost
+          );
+          return createdRoute;
         }
       }
 

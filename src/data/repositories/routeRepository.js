@@ -2,19 +2,25 @@ import { Either } from '../../business/utils/either/Either.js';
 import Route from '../models/Route.js';
 import IRouteRepository from '../../business/repositories/IRouteRepository.js';
 import { AppError } from '../../business/utils/errorUtils.js';
+import mongoose from 'mongoose';
 
 const RouteRepository = {
   ...IRouteRepository,
 
   create: async routeData => {
-    const newRoute = new Route(routeData);
-    const validationError = newRoute.validateSync();
+    try {
+      const newRoute = new Route(routeData);
+      const validationError = newRoute.validateSync();
 
-    if (validationError) {
-      return Either.left(validationError);
+      if (validationError) {
+        return Either.left(validationError);
+      }
+
+      const saved = await newRoute.save();
+      return Either.right(saved);
+    } catch (err) {
+      return Either.left(err);
     }
-
-    return newRoute.save().then(Either.right).catch(Either.left);
   },
 
   findAll: async () => {
@@ -22,6 +28,12 @@ const RouteRepository = {
   },
 
   findByMapId: async mapId => {
+    if (typeof mapId === 'string') {
+      const routes = await Route.find({
+        $or: [{ mapId: mapId }, { mapId: new mongoose.Types.ObjectId(mapId) }],
+      }).lean();
+      return Either.right(routes);
+    }
     return Route.find({ mapId }).lean().then(Either.right).catch(Either.left);
   },
 

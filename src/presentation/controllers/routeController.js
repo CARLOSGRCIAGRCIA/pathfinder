@@ -1,8 +1,10 @@
 import { AppError } from '../../business/utils/errorUtils.js';
+import socketService from '../socket/socketService.js';
 
 const RouteController = {
   findOptimalRoute: routeService => async (req, res, next) => {
-    const result = await routeService.findOptimalRoute(req.params.mapId, req.body, req.user);
+    const mapId = req.params.mapId;
+    const result = await routeService.findOptimalRoute(mapId, req.body, req.user);
     result.fold(
       error => {
         const status =
@@ -13,7 +15,21 @@ const RouteController = {
             : 500;
         next(AppError(error.message, status));
       },
-      route => res.status(201).json(route)
+      route => {
+        const response = {
+          _id: route._id,
+          mapId: route.mapId,
+          start: route.start,
+          end: route.end,
+          path: route.path,
+          distance: route.distance,
+          cost: route.cost,
+          createdBy: route.createdBy,
+          createdAt: route.createdAt,
+        };
+        socketService.emitRouteCreated(mapId, response);
+        res.status(201).json(response);
+      }
     );
   },
 
@@ -33,8 +49,16 @@ const RouteController = {
   },
 
   deleteRoute: routeService => async (req, res, next) => {
-    const result = await routeService.deleteRoute(req.params.routeId);
-    result.fold(next, () => res.status(204).json(null));
+    const mapId = req.body.mapId || req.params.routeId;
+    const routeId = req.params.routeId;
+    const result = await routeService.deleteRoute(routeId);
+    result.fold(
+      error => next(error),
+      () => {
+        socketService.emitRouteDeleted(mapId, routeId);
+        res.status(204).json(null);
+      }
+    );
   },
 };
 

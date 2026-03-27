@@ -20,9 +20,25 @@ export const validate = validations => {
 };
 
 export const obstacleValidation = [
-  body('*.x').isInt({ min: 0 }).withMessage('X must be a non-negative integer'),
-  body('*.y').isInt({ min: 0 }).withMessage('Y must be a non-negative integer'),
-  body('*.size').optional().isInt({ min: 1, max: 3 }).withMessage('Size must be between 1 and 3'),
+  body('obstacles').isArray().withMessage('Obstacles must be an array'),
+  body('obstacles.*.x')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('X must be a non-negative integer'),
+  body('obstacles.*.y')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Y must be a non-negative integer'),
+  body('obstacles.*.name').optional().isString().trim().notEmpty().withMessage('Name is required'),
+  body('obstacles.*.type')
+    .optional()
+    .isString()
+    .isIn(['wall', 'rock', 'water', 'building', 'forest', 'pit', 'custom'])
+    .withMessage('Invalid type'),
+  body('obstacles.*.size')
+    .optional()
+    .isInt({ min: 1, max: 3 })
+    .withMessage('Size must be between 1 and 3'),
 ];
 export const validateObstacle = [
   body('x').isInt({ min: 0 }).withMessage('X must be a non-negative integer'),
@@ -30,9 +46,16 @@ export const validateObstacle = [
   body('size').isInt({ min: 0 }).withMessage('Size must be a non-negative integer'),
 ];
 export const waypointValidation = [
-  body('*.x').isInt({ min: 0 }).withMessage('X must be a non-negative integer'),
-  body('*.y').isInt({ min: 0 }).withMessage('Y must be a non-negative integer'),
-  body('*.name').isString().trim().notEmpty().withMessage('Name is required'),
+  body('waypoints').isArray().withMessage('Waypoints must be an array'),
+  body('waypoints.*.x')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('X must be a non-negative integer'),
+  body('waypoints.*.y')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Y must be a non-negative integer'),
+  body('waypoints.*.name').optional().isString().trim().notEmpty().withMessage('Name is required'),
 ];
 export const validateWaypoints = [
   body('x').isInt({ min: 0 }).withMessage('X must be a non-negative integer'),

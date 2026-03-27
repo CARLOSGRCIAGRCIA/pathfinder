@@ -1,4 +1,5 @@
 import express from 'express';
+import { createServer } from 'http';
 import Environment from './data/config/environment.js';
 import {
   connectToDatabase,
@@ -13,6 +14,7 @@ import { errorHandler, NotFoundError } from './presentation/middleware/errorHand
 import { displayWelcomeMessage, stopAnimation } from './business/utils/pathfinderAnimation.js';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import socketService from './presentation/socket/socketService.js';
 
 const app = express();
 
@@ -233,7 +235,9 @@ app.use(errorHandler);
 
 if (process.env.NODE_ENV !== 'test') {
   const PORT = process.env.PORT || 3000;
-  server = app.listen(PORT, () => {
+  const httpServer = createServer(app);
+  socketService.initialize(httpServer);
+  httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT} in ${Environment.NODE_ENV} mode`);
     displayWelcomeMessage();
   });

@@ -2,11 +2,6 @@ import Heap from 'heap';
 import { Either } from '../utils/either/Either.js';
 import { AppError } from '../utils/errorUtils.js';
 import { measureExecutionTime } from '../utils/monitoring.js';
-import memoizeFindOptimalPath from '../utils/memoization.js';
-import {
-  hasCyclicDependencies,
-  handleStartEqualsEnd,
-} from '../../business/utils/validationUtils.js';
 
 const THRESHOLD = 10;
 
@@ -32,8 +27,176 @@ const TERRAIN_COSTS = {
   [TERRAIN_TYPES.WALL]: Infinity,
 };
 
-const createNode = (x, y, f = 0, g = 0, h = 0, parent = null, terrain = TERRAIN_TYPES.PLAINS) => {
-  return { x, y, f, g, h, parent, terrain };
+const OBSTACLE_TYPES = {
+  CIRCLE: 'circle',
+  RECTANGLE: 'rectangle',
+  POLYGON: 'polygon',
+};
+
+class Obstacle {
+  constructor(obstacle) {
+    this.id = obstacle._id || obstacle.id;
+    this.x = obstacle.x;
+    this.y = obstacle.y;
+    this.size = obstacle.size || 1;
+    this.type = obstacle.type || 'wall';
+    this.rotation = obstacle.rotation || 0;
+
+    this._initShape();
+  }
+
+  _initShape() {
+    this.radius = this.size / 2;
+    this.width = this.size;
+    this.height = this.size;
+
+    this.minX = this.x - this.radius;
+    this.maxX = this.x + this.radius;
+    this.minY = this.y - this.radius;
+    this.maxY = this.y + this.radius;
+  }
+
+  containsPoint(px, py) {
+    const dx = px - this.x;
+    const dy = py - this.y;
+    return dx * dx + dy * dy <= this.radius * this.radius;
+  }
+
+  getDistanceToPoint(px, py) {
+    const dx = px - this.x;
+    const dy = py - this.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    return distance - this.radius;
+  }
+
+  intersectsLine(x1, y1, x2, y2) {
+    if (this.containsPoint(x1, y1) || this.containsPoint(x2, y2)) {
+      return true;
+    }
+
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const fx = x1 - this.x;
+    const fy = y1 - this.y;
+
+    const a = dx * dx + dy * dy;
+    const b = 2 * (fx * dx + fy * dy);
+    const c = fx * fx + fy * fy - this.radius * this.radius;
+
+    let discriminant = b * b - 4 * a * c;
+
+    if (discriminant < 0) {
+      return false;
+    }
+
+    discriminant = Math.sqrt(discriminant);
+    const t1 = (-b - discriminant) / (2 * a);
+    const t2 = (-b + discriminant) / (2 * a);
+
+    return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1);
+  }
+
+  getBoundingBox(padding = 0) {
+    return {
+      minX: this.x - this.radius - padding,
+      maxX: this.x + this.radius + padding,
+      minY: this.y - this.radius - padding,
+      maxY: this.y + this.radius + padding,
+    };
+  }
+}
+
+class ObstacleManager {
+  constructor(obstacles) {
+    this.obstacles = obstacles.map(o => new Obstacle(o));
+    this._buildGrid();
+  }
+
+  _buildGrid() {
+    this.gridSize = 20;
+    this.obstacleGrid = new Map();
+
+    for (const obstacle of this.obstacles) {
+      const box = obstacle.getBoundingBox(5);
+      const minGridX = Math.floor(box.minX / this.gridSize);
+      const maxGridX = Math.floor(box.maxX / this.gridSize);
+      const minGridY = Math.floor(box.minY / this.gridSize);
+      const maxGridY = Math.floor(box.maxY / this.gridSize);
+
+      for (let gx = minGridX; gx <= maxGridX; gx++) {
+        for (let gy = minGridY; gy <= maxGridY; gy++) {
+          const key = `${gx},${gy}`;
+          if (!this.obstacleGrid.has(key)) {
+            this.obstacleGrid.set(key, []);
+          }
+          this.obstacleGrid.get(key).push(obstacle);
+        }
+      }
+    }
+  }
+
+  _getNearbyObstacles(x, y, radius = 5) {
+    const nearby = [];
+    const minGridX = Math.floor((x - radius) / this.gridSize);
+    const maxGridX = Math.floor((x + radius) / this.gridSize);
+    const minGridY = Math.floor((y - radius) / this.gridSize);
+    const maxGridY = Math.floor((y + radius) / this.gridSize);
+
+    for (let gx = minGridX; gx <= maxGridX; gx++) {
+      for (let gy = minGridY; gy <= maxGridY; gy++) {
+        const key = `${gx},${gy}`;
+        const cellObstacles = this.obstacleGrid.get(key);
+        if (cellObstacles) {
+          nearby.push(...cellObstacles);
+        }
+      }
+    }
+
+    return [...new Set(nearby)];
+  }
+
+  isColliding(x, y, margin = 0) {
+    const nearby = this._getNearbyObstacles(x, y, margin + 2);
+    for (const obstacle of nearby) {
+      if (obstacle.containsPoint(x, y)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  getMinDistanceToObstacle(x, y) {
+    const nearby = this._getNearbyObstacles(x, y);
+    let minDist = Infinity;
+    for (const obstacle of nearby) {
+      const dist = obstacle.getDistanceToPoint(x, y);
+      if (dist < minDist) {
+        minDist = dist;
+      }
+    }
+    return minDist;
+  }
+
+  getPathCollisions(path, margin = 1) {
+    const collisions = [];
+    for (let i = 0; i < path.length - 1; i++) {
+      const nearby = this._getNearbyObstacles(path[i].x, path[i].y, 5);
+      for (const obstacle of nearby) {
+        if (obstacle.intersectsLine(path[i].x, path[i].y, path[i + 1].x, path[i + 1].y)) {
+          collisions.push({
+            segmentStart: path[i],
+            segmentEnd: path[i + 1],
+            obstacle: obstacle.id,
+          });
+        }
+      }
+    }
+    return collisions;
+  }
+}
+
+const createNode = (x, y, g = 0, h = 0, parent = null, terrain = TERRAIN_TYPES.PLAINS) => {
+  return { x, y, g, h, f: g + h, parent, terrain };
 };
 
 const isEqual = (nodeA, nodeB) => {
@@ -44,8 +207,7 @@ const calculateDistance = (pointA, pointB) => {
   if (!pointA || !pointB) {
     return Infinity;
   }
-  const distance = Math.sqrt(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2));
-  return distance;
+  return Math.sqrt(Math.pow(pointA.x - pointB.x, 2) + Math.pow(pointA.y - pointB.y, 2));
 };
 
 const getTerrainCost = terrainType => {
@@ -137,32 +299,10 @@ const calculateTotalDistance = (start, order) => {
 
 const orderWaypoints = (start, waypoints) => {
   if (waypoints.length < THRESHOLD) {
-    const result = heldKarp(start, waypoints);
-    return result;
+    return heldKarp(start, waypoints);
   } else {
-    const result = twoOpt(start, waypoints);
-    return result;
+    return twoOpt(start, waypoints);
   }
-};
-
-const isPointInObstacle = (x, y, obstacles, margin = 1) => {
-  for (const obstacle of obstacles) {
-    const { x: ox, y: oy, size } = obstacle;
-    const halfSize = size / 2;
-    const expandedOx = ox - halfSize - margin;
-    const expandedOy = oy - halfSize - margin;
-    const expandedSize = size + 2 * margin;
-
-    if (
-      x >= expandedOx &&
-      x < expandedOx + expandedSize &&
-      y >= expandedOy &&
-      y < expandedOy + expandedSize
-    ) {
-      return true;
-    }
-  }
-  return false;
 };
 
 const getTerrainAt = (x, y, terrainGrid, defaultTerrain = TERRAIN_TYPES.PLAINS) => {
@@ -170,12 +310,12 @@ const getTerrainAt = (x, y, terrainGrid, defaultTerrain = TERRAIN_TYPES.PLAINS) 
     return defaultTerrain;
   }
 
-  const row = terrainGrid[y];
+  const row = terrainGrid[Math.floor(y)];
   if (!row) {
     return defaultTerrain;
   }
 
-  const terrainValue = row[x];
+  const terrainValue = row[Math.floor(x)];
   if (terrainValue === undefined || terrainValue === null) {
     return defaultTerrain;
   }
@@ -192,7 +332,7 @@ const getTerrainAt = (x, y, terrainGrid, defaultTerrain = TERRAIN_TYPES.PLAINS) 
   return defaultTerrain;
 };
 
-const getNeighbors = (node, width, height, obstacles, margin = 1, terrainGrid = null) => {
+const getNeighbors = (node, width, height, obstacleManager, margin = 2, terrainGrid = null) => {
   const directions = [
     [0, -1],
     [0, 1],
@@ -202,54 +342,58 @@ const getNeighbors = (node, width, height, obstacles, margin = 1, terrainGrid = 
     [-1, 1],
     [1, -1],
     [1, 1],
+    [-2, -1],
+    [-2, 1],
+    [2, -1],
+    [2, 1],
+    [-1, -2],
+    [-1, 2],
+    [1, -2],
+    [1, 2],
   ];
 
-  const neighbors = directions
-    .map(([dx, dy]) => {
-      const newX = node.x + dx;
-      const newY = node.y + dy;
+  const neighbors = [];
 
-      if (
-        newX >= 0 &&
-        newX < width &&
-        newY >= 0 &&
-        newY < height &&
-        !isPointInObstacle(newX, newY, obstacles, margin)
-      ) {
+  for (const [dx, dy] of directions) {
+    const newX = node.x + dx;
+    const newY = node.y + dy;
+
+    if (newX >= 0 && newX < width && newY >= 0 && newY < height) {
+      if (!obstacleManager.isColliding(newX, newY, margin)) {
         const terrain = terrainGrid ? getTerrainAt(newX, newY, terrainGrid) : TERRAIN_TYPES.PLAINS;
-        return createNode(newX, newY, 0, 0, 0, null, terrain);
+        neighbors.push(createNode(newX, newY, 0, 0, null, terrain));
       }
-      return null;
-    })
-    .filter(neighbor => neighbor !== null);
+    }
+  }
+
   return neighbors;
 };
 
 const calculateHeuristic = (node, endNode) => {
-  const h = Math.sqrt(Math.pow(node.x - endNode.x, 2) + Math.pow(node.y - endNode.y, 2));
-  return h;
+  return Math.sqrt(Math.pow(node.x - endNode.x, 2) + Math.pow(node.y - endNode.y, 2));
 };
 
 const calculateCost = (nodeA, nodeB) => {
-  const baseCost = nodeA.x === nodeB.x || nodeA.y === nodeB.y ? 1 : Math.sqrt(2);
+  const dx = Math.abs(nodeA.x - nodeB.x);
+  const dy = Math.abs(nodeA.y - nodeB.y);
+  const baseCost =
+    dx > 1 || dy > 1 ? Math.sqrt(dx * dx + dy * dy) : dx === 0 || dy === 0 ? 1 : Math.sqrt(2);
   const terrainCost = getTerrainCost(nodeB.terrain);
   return baseCost * terrainCost;
 };
 
 const reconstructPath = (node, terrainGrid = null) => {
-  const buildPath = (currentNode, path = []) =>
-    currentNode === null
-      ? path
-      : buildPath(currentNode.parent, [
-          {
-            x: currentNode.x,
-            y: currentNode.y,
-            terrain: currentNode.terrain,
-          },
-          ...path,
-        ]);
+  const path = [];
+  let current = node;
 
-  const path = buildPath(node);
+  while (current) {
+    path.unshift({
+      x: current.x,
+      y: current.y,
+      terrain: current.terrain,
+    });
+    current = current.parent;
+  }
 
   let totalDistance = 0;
   let totalCost = 0;
@@ -268,23 +412,94 @@ const reconstructPath = (node, terrainGrid = null) => {
   return { path, distance: totalDistance, cost: totalCost };
 };
 
+const catmullRomSpline = (p0, p1, p2, p3, numPoints = 10) => {
+  const points = [];
+  for (let i = 0; i < numPoints; i++) {
+    const t = i / (numPoints - 1);
+    const t2 = t * t;
+    const t3 = t2 * t;
+
+    const x =
+      0.5 *
+      (2 * p1.x +
+        (-p0.x + p2.x) * t +
+        (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 +
+        (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3);
+
+    const y =
+      0.5 *
+      (2 * p1.y +
+        (-p0.y + p2.y) * t +
+        (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 +
+        (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3);
+
+    points.push({ x: Math.round(x), y: Math.round(y) });
+  }
+  return points;
+};
+
+const smoothPath = (path, obstacleManager, width, height) => {
+  if (path.length < 4) {
+    return path;
+  }
+
+  const smoothed = [];
+
+  for (let i = 0; i < path.length - 1; i++) {
+    const p0 = path[Math.max(0, i - 1)];
+    const p1 = path[i];
+    const p2 = path[Math.min(path.length - 1, i + 1)];
+    const p3 = path[Math.min(path.length - 1, i + 2)];
+
+    const segment = catmullRomSpline(p0, p1, p2, p3, 5);
+
+    for (let j = 0; j < segment.length - 1; j++) {
+      const pt = segment[j];
+      if (!obstacleManager.isColliding(pt.x, pt.y, 1)) {
+        smoothed.push(pt);
+      } else {
+        smoothed.push(p1);
+        break;
+      }
+    }
+  }
+
+  smoothed.push(path[path.length - 1]);
+
+  const result = [smoothed[0]];
+  for (let i = 1; i < smoothed.length; i++) {
+    const last = result[result.length - 1];
+    if (last.x !== smoothed[i].x || last.y !== smoothed[i].y) {
+      result.push(smoothed[i]);
+    }
+  }
+
+  return result;
+};
+
 const findPathBetweenTwoPoints = (
   start,
   end,
-  obstacles,
+  obstacleManager,
   width,
   height,
-  margin = 1,
+  margin = 2,
   terrainGrid = null
 ) => {
   const startTerrain = terrainGrid
     ? getTerrainAt(start.x, start.y, terrainGrid)
     : TERRAIN_TYPES.PLAINS;
-  const startNode = createNode(start.x, start.y, 0, 0, 0, null, startTerrain);
-  const endNode = createNode(end.x, end.y);
+
+  const startNode = createNode(start.x, start.y, 0, 0, null, startTerrain);
+  const endNode = { x: end.x, y: end.y };
+
   const openList = new Heap((a, b) => a.f - b.f);
   openList.push(startNode);
+
   const closedSet = new Set();
+  const gScores = new Map();
+
+  gScores.set(`${start.x},${start.y}`, 0);
 
   while (openList.size() > 0) {
     const currentNode = openList.pop();
@@ -293,29 +508,129 @@ const findPathBetweenTwoPoints = (
       return reconstructPath(currentNode, terrainGrid);
     }
 
-    closedSet.add(`${currentNode.x},${currentNode.y}`);
-    const neighbors = getNeighbors(currentNode, width, height, obstacles, margin, terrainGrid);
+    const key = `${currentNode.x},${currentNode.y}`;
+    closedSet.add(key);
 
-    neighbors.forEach(neighbor => {
-      if (closedSet.has(`${neighbor.x},${neighbor.y}`)) {
-        return;
+    const neighbors = getNeighbors(
+      currentNode,
+      width,
+      height,
+      obstacleManager,
+      margin,
+      terrainGrid
+    );
+
+    for (const neighbor of neighbors) {
+      const neighborKey = `${neighbor.x},${neighbor.y}`;
+
+      if (closedSet.has(neighborKey)) {
+        continue;
       }
 
-      neighbor.g = currentNode.g + calculateCost(currentNode, neighbor);
-      neighbor.h = calculateHeuristic(neighbor, endNode);
-      neighbor.f = neighbor.g + neighbor.h;
-      neighbor.parent = currentNode;
+      const tentativeG = currentNode.g + calculateCost(currentNode, neighbor);
+      const existingG = gScores.get(neighborKey);
 
-      const existingNode = openList.toArray().find(n => isEqual(n, neighbor));
-      if (existingNode && existingNode.g <= neighbor.g) {
-        return;
+      if (existingG === undefined || tentativeG < existingG) {
+        gScores.set(neighborKey, tentativeG);
+        neighbor.g = tentativeG;
+        neighbor.h = calculateHeuristic(neighbor, endNode);
+        neighbor.f = neighbor.g + neighbor.h;
+        neighbor.parent = currentNode;
+
+        openList.push(neighbor);
       }
-
-      openList.push(neighbor);
-    });
+    }
   }
 
   return null;
+};
+
+const validateStartEndPoints = (start, end, obstacleManager, margin = 2) => {
+  if (obstacleManager.isColliding(start.x, start.y, margin)) {
+    return Either.left(
+      new AppError(
+        `Start point (${start.x}, ${start.y}) is inside or too close to an obstacle`,
+        400,
+        'INVALID_START'
+      )
+    );
+  }
+
+  if (obstacleManager.isColliding(end.x, end.y, margin)) {
+    return Either.left(
+      new AppError(
+        `End point (${end.x}, ${end.y}) is inside or too close to an obstacle`,
+        400,
+        'INVALID_END'
+      )
+    );
+  }
+
+  const distToStart = obstacleManager.getMinDistanceToObstacle(start.x, start.y);
+  const distToEnd = obstacleManager.getMinDistanceToObstacle(end.x, end.y);
+
+  if (distToStart < margin || distToEnd < margin) {
+    return Either.left(
+      new AppError(
+        'Start or end point is too close to an obstacle. Increase the distance.',
+        400,
+        'OBSTACLE_TOO_CLOSE'
+      )
+    );
+  }
+
+  return null;
+};
+
+const validateWaypoints = (waypoints, obstacleManager, margin = 2) => {
+  for (let i = 0; i < waypoints.length; i++) {
+    const wp = waypoints[i];
+
+    if (obstacleManager.isColliding(wp.x, wp.y, margin)) {
+      return Either.left(
+        new AppError(
+          `Waypoint "${wp.name}" at (${wp.x}, ${wp.y}) is inside or too close to an obstacle`,
+          400,
+          'INVALID_WAYPOINT'
+        )
+      );
+    }
+
+    const dist = obstacleManager.getMinDistanceToObstacle(wp.x, wp.y);
+    if (dist < margin) {
+      return Either.left(
+        new AppError(
+          `Waypoint "${wp.name}" at (${wp.x}, ${wp.y}) is too close to an obstacle. Move it at least ${margin + 1} units away.`,
+          400,
+          'WAYPOINT_TOO_CLOSE'
+        )
+      );
+    }
+  }
+
+  return null;
+};
+
+const verifyPathClear = (path, obstacleManager) => {
+  const collisions = obstacleManager.getPathCollisions(path, 1);
+
+  if (collisions.length > 0) {
+    return {
+      valid: false,
+      collisions,
+    };
+  }
+
+  for (const point of path) {
+    if (obstacleManager.isColliding(point.x, point.y, 1)) {
+      return {
+        valid: false,
+        reason: `Path passes through obstacle at (${point.x}, ${point.y})`,
+      };
+    }
+  }
+
+  return { valid: true };
 };
 
 const findOptimalPath = measureExecutionTime(
@@ -327,7 +642,7 @@ const findOptimalPath = measureExecutionTime(
     width,
     height,
     userPreferences,
-    margin = 1,
+    margin = 2,
     terrainGrid = null
   ) => {
     if (
@@ -343,47 +658,25 @@ const findOptimalPath = measureExecutionTime(
       return Either.left(new AppError('Start or end point is out of bounds', 400, 'OUT_OF_BOUNDS'));
     }
 
-    const startEndError = handleStartEqualsEnd(start, end);
-    if (startEndError) {
-      return startEndError;
-    }
-
-    if (hasCyclicDependencies(waypoints)) {
+    if (start.x === end.x && start.y === end.y) {
       return Either.left(
-        new AppError('Cyclic dependencies detected in waypoints', 400, 'CYCLIC_DEPENDENCIES')
+        new AppError('Start and end points cannot be the same', 400, 'SAME_POINTS')
       );
     }
 
-    const allPoints = [start, ...waypoints, end];
-    for (const point of allPoints) {
-      if (isPointInObstacle(point.x, point.y, obstacles, margin)) {
-        return Either.left(
-          new AppError(
-            'A point is inside an obstacle or too close to it',
-            400,
-            'OBSTACLE_COLLISION'
-          ),
-          'OBSTACLE_COLLISION'
-        );
-      }
+    const obstacleManager = new ObstacleManager(obstacles);
 
-      if (terrainGrid) {
-        const terrain = getTerrainAt(point.x, point.y, terrainGrid);
-        const cost = getTerrainCost(terrain);
-        if (cost === Infinity) {
-          return Either.left(
-            new AppError(
-              `Point at (${point.x}, ${point.y}) is on impassable terrain: ${terrain}`,
-              400,
-              'IMPASSABLE_TERRAIN'
-            )
-          );
-        }
-      }
+    const startEndValidation = validateStartEndPoints(start, end, obstacleManager, margin);
+    if (startEndValidation) {
+      return startEndValidation;
+    }
+
+    const waypointsValidation = validateWaypoints(waypoints, obstacleManager, margin);
+    if (waypointsValidation) {
+      return waypointsValidation;
     }
 
     const orderedWaypoints = orderWaypoints(start, waypoints);
-
     if (!Array.isArray(orderedWaypoints)) {
       return Either.left(new AppError('Failed to order waypoints', 500, 'ORDERING_FAILED'));
     }
@@ -401,7 +694,7 @@ const findOptimalPath = measureExecutionTime(
       const pathResult = findPathBetweenTwoPoints(
         currentStart,
         currentEnd,
-        obstacles,
+        obstacleManager,
         width,
         height,
         margin,
@@ -411,7 +704,7 @@ const findOptimalPath = measureExecutionTime(
       if (!pathResult) {
         return Either.left(
           new AppError(
-            `No path found between ${JSON.stringify(currentStart)} and ${JSON.stringify(currentEnd)}`,
+            `No path found between (${currentStart.x}, ${currentStart.y}) and (${currentEnd.x}, ${currentEnd.y})`,
             400,
             'NO_PATH_FOUND'
           )
@@ -423,28 +716,38 @@ const findOptimalPath = measureExecutionTime(
       totalCost += pathResult.cost;
     }
 
+    const smoothedPath = smoothPath(fullPath, obstacleManager, width, height);
+
+    const pathVerification = verifyPathClear(smoothedPath, obstacleManager);
+    if (!pathVerification.valid) {
+      console.warn(
+        'Path verification failed:',
+        pathVerification.reason || pathVerification.collisions
+      );
+    }
+
     return Either.right({
-      path: fullPath,
+      path: smoothedPath,
       distance: totalDistance,
       cost: totalCost,
+      originalPathLength: fullPath.length,
+      smoothedPathLength: smoothedPath.length,
       terrainGrid: terrainGrid ? 'provided' : 'default',
     });
   },
   'findOptimalPath'
 );
 
-const memoizedFindOptimalPath = memoizeFindOptimalPath(findOptimalPath);
-
 export {
-  memoizedFindOptimalPath as findOptimalPath,
+  findOptimalPath,
   TERRAIN_TYPES,
   TERRAIN_COSTS,
   getTerrainCost,
   getTerrainAt,
+  Obstacle,
+  ObstacleManager,
 };
 
 export const clearPathCache = () => {
-  if (memoizedFindOptimalPath.cache) {
-    memoizedFindOptimalPath.cache.clear();
-  }
+  console.log('Path cache cleared');
 };

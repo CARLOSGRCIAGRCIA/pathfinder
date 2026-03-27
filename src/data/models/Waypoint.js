@@ -31,8 +31,19 @@ const WaypointSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['checkpoint', 'fuel', 'food', 'rest', 'danger', 'landmark', 'custom'],
-      default: 'checkpoint',
+      enum: [
+        'checkpoint',
+        'fuel',
+        'food',
+        'rest',
+        'danger',
+        'landmark',
+        'custom',
+        'start',
+        'end',
+        'normal',
+      ],
+      default: 'normal',
     },
     order: {
       type: Number,

@@ -1,11 +1,21 @@
 import { AppError } from '../../business/utils/errorUtils.js';
+import socketService from '../socket/socketService.js';
 
 const WaypointController = {
   createWaypoint: waypointService => async (req, res, next) => {
-    const result = await waypointService.createWaypoints(req.params.mapId, req.body);
+    const waypointData = req.body.waypoints || req.body;
+    const mapId = req.params.mapId;
+    const result = await waypointService.createWaypoints(mapId, waypointData);
     result.fold(
       error => next(error),
-      waypoints => res.status(201).json(waypoints)
+      waypoints => {
+        if (Array.isArray(waypoints)) {
+          waypoints.forEach(wp => socketService.emitWaypointCreated(mapId, wp));
+        } else {
+          socketService.emitWaypointCreated(mapId, waypoints);
+        }
+        res.status(201).json(waypoints);
+      }
     );
   },
 
@@ -18,18 +28,27 @@ const WaypointController = {
   },
 
   updateWaypoint: waypointService => async (req, res, next) => {
+    const mapId = req.params.mapId;
     const result = await waypointService.updateWaypoint(req.params.waypointId, req.body);
     result.fold(
       error => next(error),
-      waypoint => res.json(waypoint)
+      waypoint => {
+        socketService.emitWaypointUpdated(mapId, waypoint);
+        res.json(waypoint);
+      }
     );
   },
 
   deleteWaypoint: waypointService => async (req, res, next) => {
-    const result = await waypointService.deleteWaypoint(req.params.waypointId);
+    const mapId = req.params.mapId;
+    const waypointId = req.params.waypointId;
+    const result = await waypointService.deleteWaypoint(waypointId);
     result.fold(
       error => next(error),
-      () => res.status(204).json(null)
+      () => {
+        socketService.emitWaypointDeleted(mapId, waypointId);
+        res.status(204).json(null);
+      }
     );
   },
 };

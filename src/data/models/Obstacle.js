@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 
 const ObstacleSchema = new mongoose.Schema(
   {
+    name: {
+      type: String,
+      trim: true,
+      default: 'Obstacle',
+    },
     x: {
       type: Number,
       required: true,
